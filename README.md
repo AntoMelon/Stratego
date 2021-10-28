@@ -1,1 +1,1 @@
-# Strategalere
+# Stratego
