@@ -1,0 +1,3 @@
+[submodule "gf"]
+	path = gf
+	url = https://github.com/GamedevFramework/gf.git
