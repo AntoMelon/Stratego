@@ -7,11 +7,13 @@
 cmake_minimum_required(VERSION 3.10)
 
 project(STGCLIENT
-  LANGUAGES CXX
+        LANGUAGES CXX
+        VERSION 0.1.0
 )
 
-find_package(Threads)
+find_package(gf REQUIRED)
 
+find_package(Threads)
 
 add_executable(stgclient
   main.cc
@@ -19,7 +21,9 @@ add_executable(stgclient
 
 target_link_libraries(stgclient
   PRIVATE
-    Threads::Threads
+        Threads::Threads
+        gf::graphics
+        gf::net
 )
 
 target_compile_options(stgclient
