@@ -3,3 +3,9 @@
 //
 
 #include "protocol.h"
+
+namespace stg {
+
+    gf::Packet Request::serialize() {
+    }
+}
