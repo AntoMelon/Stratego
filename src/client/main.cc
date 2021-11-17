@@ -9,12 +9,17 @@ int main() {
     /*stg::ErrorRequest req;
      *
      */
-    gf::Packet data = gf::Packet();
-    data.is("Lel");
+    /*gf::Packet data = gf::Packet();
+    data.is("Lel");*/
 
-    std::string test = std::string("Test");
+    stg::ClientHello data;
+    data.name = "Test";
 
-    socket_client.sendPacket(data);
+    gf::Packet data2;
+    data2.is(data);
+
+    //gf::Packet::is(data);
+    socket_client.sendPacket(data2);
 
     return 0;
 }
