@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include <gf/TcpListener.h>
 #include <gf/Packet.h>
 #include <gf/TcpSocket.h>
@@ -11,10 +13,12 @@ int main() {
         gf::TcpSocket client = listener.accept();
 
         if(client) {
+            std::cout << "A client has connected" << std::endl;
             gf::Packet packet;
+
             client.recvPacket(packet);
-            stg::Request req = packet.as<stg::Request>();
-            cout << req.type;
+            stg::ClientHello hello = packet.as<stg::ClientHello>();
+            std::cout << "Hello " << hello.name << std::endl;
         }
     }
 

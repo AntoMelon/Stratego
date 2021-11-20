@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "../common/protocol.h"
 #include <gf/TcpSocket.h>
 #include <gf/Packet.h>
@@ -13,10 +15,16 @@ int main() {
     data.is("Lel");*/
 
     stg::ClientHello data;
-    data.name = "Test";
+    data.name = "IT WORKS";
 
     gf::Packet data2;
     data2.is(data);
+
+    /*
+    for (auto b : data2.bytes) {
+        std::cout << b << " ";
+    }
+    */
 
     //gf::Packet::is(data);
     socket_client.sendPacket(data2);
