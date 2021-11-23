@@ -7,12 +7,7 @@
 int main() {
 
     gf::TcpSocket socket_client = gf::TcpSocket("localhost", "42690");
-
-    /*stg::ErrorRequest req;
-     *
-     */
-    /*gf::Packet data = gf::Packet();
-    data.is("Lel");*/
+    bool inGame = false;
 
     stg::ClientHello data;
     data.name = "IT WORKS";
@@ -20,14 +15,21 @@ int main() {
     gf::Packet data2;
     data2.is(data);
 
-    /*
-    for (auto b : data2.bytes) {
-        std::cout << b << " ";
-    }
-    */
-
-    //gf::Packet::is(data);
     socket_client.sendPacket(data2);
+
+    while (!inGame) {
+        gf::Packet response;
+        socket_client.recvPacket(response);
+
+        stg::ServerMessage resp = response.as<stg::ServerMessage>();
+
+        if (resp.code == 0) {
+            std::cout << resp.message << std::endl;
+        } else if (resp.code == 1) {
+            std::cout << resp.message << std::endl;
+            inGame = true;
+        }
+    }
 
     return 0;
 }
