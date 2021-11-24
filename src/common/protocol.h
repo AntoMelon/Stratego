@@ -12,19 +12,15 @@ using namespace gf::literals;
 
 namespace stg {
 
-    enum RequestType {
-        ERROR,
-        CONNECTION,
+    enum ResponseCode {
         WAITING,
-        BOARD,
-        MOVE,
-        END,
+        STARTING,
+        BOARD_OK,
+        BOARD_ERR
     };
 
-    struct coords {
-        int x;
-        int y;
-    };
+
+    /*Client -> Server*/
 
     struct ClientHello {
         static constexpr gf::Id type = "ClientHello"_id;
@@ -36,24 +32,33 @@ namespace stg {
         return ar | data.name;
     }
 
-    struct ServerError {
-        static constexpr gf::Id type = "ServerHello"_id;
-        int code;
-        std::string message;
+    struct ClientMoveRequest {
+        static constexpr gf::Id type = "ClientMoveRequest"_id;
+        int from_x;
+        int from_y;
+        int to_x;
+        int to_y;
     };
 
     template<typename Archive>
-    Archive operator|(Archive& ar, ServerError& error) {
-        return ar | error.code | error.message;
+    Archive operator|(Archive& ar, ClientMoveRequest& move) {
+        return ar | move.from_x | move.from_y | move.to_x | move.to_y;
     }
+
+    struct ClientBoardSubmit {
+        static constexpr gf::Id type = "ClientBoardSubmit"_id;
+    };
+
+    template<typename Archive> 
+    Archive operator|(Archive& ar, ClientBoardSubmit& submit) {
+        
+    }
+
+    /*Server -> Client*/
 
     struct ServerMessage{
         static constexpr gf::Id type = "ServerMessage"_id;
-        int code;
-        /*
-        - 0: Waiting other player
-        - 1: Starting game
-        */
+        stg::ResponseCode code;
         std::string message;
     };
 
@@ -62,71 +67,24 @@ namespace stg {
         return ar | response.code | response.message;
     }
 
+    struct ServerMoveNotif {
+        static constexpr gf::Id type = "ServerMoveNotif"_id;
+        int from_x;
+        int from_y;
+        int to_x;
+        int to_y;
 
-    /*
-    class Request {
-    public :
-        stg::RequestType type;
+        int str_atk;
+        int str_def;
 
-        gf::Packet serialize();
+        bool atk_alive;
+        bool def_alive;
     };
 
-    class ErrorRequest : public Request {
-    public:
-        stg::RequestType type = ERROR;
-        struct {
-            std::string message;
-        } content;
-    };
-
-    class ConnectionRequest : public Request {
-        stg::RequestType type = CONNECTION;
-        struct {
-            enum {
-                OK,
-                KO
-            } status;
-        } content;
-    };
-
-    class WaitingRequest : public Request {
-        stg::RequestType type = WAITING;
-        struct {
-            std::string message;
-        } content;
-    };
-
-    class BoardRequest : public Request {
-        stg::RequestType type = BOARD;
-        struct {
-            //stg::Board board;
-            enum {
-                RED,
-                BLUE
-            } color;
-        } content;
-    };
-
-    class MoveRequest : public Request {
-        stg::RequestType type = MOVE;
-        struct {
-            std::vector<struct {
-                stg::coords from;
-                stg::coords to;
-            }> moves;
-        } content;
-    };
-
-    class EndRequest : public Request {
-        stg::RequestType type = END;
-        struct {
-            enum {
-                RED,
-                BLUE
-            } winner;
-        } content;
-    };*/
-
+    template<typename Archive>
+    Archive operator|(Archive& ar, ServerMoveNotif& move) {
+        return ar | move.from_x | move.from_y | move.to_x | move.to_y | move.str_atk | move.str_def | move.atk_alive | move.def_alive;
+    }
 }
 
 #ifndef STG_PROTOCOL_H

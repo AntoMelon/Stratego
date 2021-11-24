@@ -23,9 +23,9 @@ int main() {
 
         stg::ServerMessage resp = response.as<stg::ServerMessage>();
 
-        if (resp.code == 0) {
+        if (resp.code == stg::ResponseCode::WAITING) {
             std::cout << resp.message << std::endl;
-        } else if (resp.code == 1) {
+        } else if (resp.code == stg::ResponseCode::STARTING) {
             std::cout << resp.message << std::endl;
             inGame = true;
         }

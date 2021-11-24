@@ -17,7 +17,8 @@ find_package(Threads)
 
 add_executable(stgclient
   main.cc
-        ../common/protocol.cpp ../common/protocol.h)
+        ../common/protocol.cpp ../common/protocol.h
+        piece.cc piece.h)
 
 target_link_libraries(stgclient
   PRIVATE

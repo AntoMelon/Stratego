@@ -29,7 +29,7 @@ int main() {
             std::cout << "Hello " << hello.name << std::endl;
 
             stg::ServerMessage resp;
-            resp.code = 0;
+            resp.code = stg::ResponseCode::WAITING;
             resp.message = "You are the first player connected. Waiting for another one...";
             packet.is(resp);
             player1.sendPacket(packet);
@@ -45,7 +45,7 @@ int main() {
             std::cout << "Hello " << hello.name << std::endl;
 
             stg::ServerMessage resp;
-            resp.code = 1;
+            resp.code = stg::ResponseCode::STARTING;
             resp.message = "Both players have connected. Starting the game.";
             packet.is(resp);
 
