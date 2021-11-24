@@ -6,6 +6,6 @@
 
 namespace stg {
 
-    gf::Packet Request::serialize() {
-    }
+    //gf::Packet Request::serialize() {
+    //}
 }

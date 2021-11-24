@@ -18,6 +18,11 @@ add_executable(stgserver
         ../common/protocol.cpp ../common/protocol.h
         )
 
+target_link_libraries(stgserver
+  PRIVATE
+        gf::net
+)
+
 target_compile_options(stgserver
         PRIVATE
         "-Wall" "-Wextra" "-pedantic" "-g" "-O2"

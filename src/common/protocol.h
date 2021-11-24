@@ -5,6 +5,11 @@
 #include <string>
 #include <gf/Packet.h>
 
+#include <gf/Id.h>
+#include <gf/SerializationOps.h>
+
+using namespace gf::literals;
+
 namespace stg {
 
     enum RequestType {
@@ -21,6 +26,44 @@ namespace stg {
         int y;
     };
 
+    struct ClientHello {
+        static constexpr gf::Id type = "ClientHello"_id;
+        std::string name;
+    };
+
+    template<typename Archive>
+    Archive operator|(Archive& ar, ClientHello& data) {
+        return ar | data.name;
+    }
+
+    struct ServerError {
+        static constexpr gf::Id type = "ServerHello"_id;
+        int code;
+        std::string message;
+    };
+
+    template<typename Archive>
+    Archive operator|(Archive& ar, ServerError& error) {
+        return ar | error.code | error.message;
+    }
+
+    struct ServerMessage{
+        static constexpr gf::Id type = "ServerMessage"_id;
+        int code;
+        /*
+        - 0: Waiting other player
+        - 1: Starting game
+        */
+        std::string message;
+    };
+
+    template<typename Archive>
+    Archive operator|(Archive& ar, ServerMessage& response) {
+        return ar | response.code | response.message;
+    }
+
+
+    /*
     class Request {
     public :
         stg::RequestType type;
@@ -36,7 +79,7 @@ namespace stg {
         } content;
     };
 
-    /*class ConnectionRequest : public Request {
+    class ConnectionRequest : public Request {
         stg::RequestType type = CONNECTION;
         struct {
             enum {
