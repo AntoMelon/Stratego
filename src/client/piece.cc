@@ -1,11 +1,15 @@
 #include "piece.h"
 
 namespace stg {
-    Piece::Piece(int str) : strength(str) {
+    Piece::Piece(PieceName _name, Color _col) : name(_name), col(_col) {
 
     }
 
-    int Piece::getStrength() {
-        return strength;
+    PieceName Piece::getPieceName() {
+        return name;
+    }
+
+    Color Piece::getColor() {
+        return col;
     }
 }
