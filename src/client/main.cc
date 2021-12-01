@@ -1,13 +1,31 @@
 #include <iostream>
+#include <thread>
 
 #include "../common/protocol.h"
 #include <gf/TcpSocket.h>
 #include <gf/Packet.h>
+#include <gf/Queue.h>
+
+gf::Queue<gf::Packet> serverPackets;
+
+void threadPackets(gf::TcpSocket& socket,gf::Queue<gf::Packet>& queue) {
+    gf::Packet packet;
+    for(;;) {
+        gf::SocketStatus status = socket.recvPacket(packet);
+        if (status == gf::SocketStatus::Close) {
+            return;
+        }
+        queue.push(packet);
+    }
+}
 
 int main() {
 
     gf::TcpSocket socket_client = gf::TcpSocket("localhost", "42690");
     bool inGame = false;
+
+    std::thread packetsThread(threadPackets,std::ref(socket_client),std::ref(serverPackets));
+    packetsThread.detach();
 
     stg::ClientHello data;
     data.name = "IT WORKS";
@@ -19,15 +37,28 @@ int main() {
 
     while (!inGame) {
         gf::Packet response;
-        socket_client.recvPacket(response);
 
-        stg::ServerMessage resp = response.as<stg::ServerMessage>();
+        if (serverPackets.poll(response)) {
+            switch(response.getType()) {
+                case stg::ServerMessage::type:
+                stg::ServerMessage msg = response.as<stg::ServerMessage>();
 
-        if (resp.code == stg::ResponseCode::WAITING) {
-            std::cout << resp.message << std::endl;
-        } else if (resp.code == stg::ResponseCode::STARTING) {
-            std::cout << resp.message << std::endl;
-            inGame = true;
+                switch(msg.code) {
+                    case stg::ResponseCode::WAITING:
+                    std::cout << msg.message << std::endl;
+                    break;
+
+                    case stg::ResponseCode::STARTING:
+                    std::cout << msg.message << std::endl;
+                    inGame = true;
+                    break;
+
+                    default:
+                    break;
+                }
+
+                break;
+            }
         }
     }
 

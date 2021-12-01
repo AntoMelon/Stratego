@@ -11,17 +11,18 @@ int main() {
     gf::TcpSocket player1, player2;
     gf::Packet packet;
 
-    bool treated1 = false;
-    bool treated2 = false;
+    //bool treated1 = false;
+    //bool treated2 = false;
 
     while(!player1 || !player2) {
-        if (!treated1) {
-            player1 = listener.accept();
-        } else if (!treated2) {
-            player2 = listener.accept();
+        gf::TcpSocket client = listener.accept();
+        if (!player1) {
+            player1 = std::move(client);
+        } else {
+            player2 = std::move(client);
         }
 
-        if(player1 && !treated1) {
+        if(player1 && !player2) {
             std::cout << "A client has connected" << std::endl;
 
             player1.recvPacket(packet);
@@ -34,10 +35,10 @@ int main() {
             packet.is(resp);
             player1.sendPacket(packet);
 
-            treated1 = true;
+            //treated1 = true;
         }
         
-        if (player2 && !treated2) {
+        if (player2) {
             std::cout << "A client has connected" << std::endl;
 
             player2.recvPacket(packet);
@@ -52,7 +53,7 @@ int main() {
             player1.sendPacket(packet);
             player2.sendPacket(packet);
 
-            treated2 = true;
+            //treated2 = true;
         }
     }
 
