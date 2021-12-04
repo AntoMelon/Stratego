@@ -2,6 +2,8 @@
 #include <thread>
 
 #include "../common/protocol.h"
+#include "../common/board.h"
+
 #include <gf/TcpSocket.h>
 #include <gf/Packet.h>
 #include <gf/Queue.h>

@@ -11,9 +11,6 @@ int main() {
     gf::TcpSocket player1, player2;
     gf::Packet packet;
 
-    //bool treated1 = false;
-    //bool treated2 = false;
-
     while(!player1 || !player2) {
         gf::TcpSocket client = listener.accept();
         if (!player1) {
@@ -34,8 +31,6 @@ int main() {
             resp.message = "You are the first player connected. Waiting for another one...";
             packet.is(resp);
             player1.sendPacket(packet);
-
-            //treated1 = true;
         }
         
         if (player2) {
@@ -52,8 +47,6 @@ int main() {
 
             player1.sendPacket(packet);
             player2.sendPacket(packet);
-
-            //treated2 = true;
         }
     }
 

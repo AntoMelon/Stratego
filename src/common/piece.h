@@ -8,6 +8,7 @@
 namespace stg {
     enum PieceName {
         NONE,
+        LAKE,
         DRAPEAU,
         ESPION,
         ECLAIREUR,
@@ -23,6 +24,7 @@ namespace stg {
     };
 
     enum Color {
+        EMPTY,
         RED,
         BLUE
     };
@@ -32,8 +34,12 @@ namespace stg {
         public:
             Piece(PieceName _name,Color _col);
 
-            PieceName getPieceName();
-            Color getColor();
+            PieceName getPieceName() const;
+            Color getColor() const;
+
+            int battleResult(const Piece& other) const;
+            
+            static Piece makeBlankPiece();
 
         private:
         PieceName name;

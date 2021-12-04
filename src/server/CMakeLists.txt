@@ -16,6 +16,8 @@ find_package(gf REQUIRED)
 add_executable(stgserver
         main.cc
         ../common/protocol.cpp ../common/protocol.h
+        ../common/piece.cc ../common/piece.h
+        ../common/board.cc ../common/board.h
         )
 
 target_link_libraries(stgserver
