@@ -3,7 +3,7 @@
 
 #include "./piece.h"
 
-#include <map>
+#include <vector>
 
 namespace stg {
 
@@ -17,8 +17,12 @@ namespace stg {
         bool movePiece(int from_x, int from_y, int to_x, int to_y);
 
 
+        stg::Piece getPiece(int x, int y) const;
+        void setPiece(int x, int y, const stg::Piece& piece);
+
+
         private:
-        std::map<std::pair<int,int>,stg::Piece> board;
+        std::vector<stg::Piece> board;
     };
 
     template<typename Archive>
