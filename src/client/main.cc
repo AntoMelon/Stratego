@@ -23,36 +23,36 @@ void threadPackets(gf::TcpSocket& socket,gf::Queue<gf::Packet>& queue) {
 
 int main() {
 
-    gf::TcpSocket socket_client = gf::TcpSocket("localhost", "42690");
-    bool inGame = false;
+    gf::TcpSocket socket_client = gf::TcpSocket("localhost", "42690"); //parametre de connxeion
+    bool inGame = false; //booleen jeu
 
     std::thread packetsThread(threadPackets,std::ref(socket_client),std::ref(serverPackets));
-    packetsThread.detach();
+    packetsThread.detach(); // indépendance thread/execution
 
-    stg::ClientHello data;
-    data.name = "IT WORKS";
+    stg::ClientHello data; //ressources à enoyer
+    data.name = "IT WORKS"; //parametre du nom
 
-    gf::Packet data2;
-    data2.is(data);
+    gf::Packet data2; //créer packet
+    data2.is(data); // serialiser packet
 
-    socket_client.sendPacket(data2);
+    socket_client.sendPacket(data2); //envoie du packet
 
-    while (!inGame) {
-        gf::Packet response;
+    while (!inGame) { //en jeu
+        gf::Packet response; //packet reponse
 
-        if (serverPackets.poll(response)) {
-            switch(response.getType()) {
-                case stg::ServerMessage::type:
-                stg::ServerMessage msg = response.as<stg::ServerMessage>();
+        if (serverPackets.poll(response)) { //si packet reçu
+            switch(response.getType()) { //e fonction du type
+                case stg::ServerMessage::type: //message
+                stg::ServerMessage msg = response.as<stg::ServerMessage>(); //deserialiser
 
-                switch(msg.code) {
-                    case stg::ResponseCode::WAITING:
-                    std::cout << msg.message << std::endl;
+                switch(msg.code) { //code reçu
+                    case stg::ResponseCode::WAITING: //en attente
+                    std::cout << msg.message << std::endl; //afficher en attente
                     break;
 
-                    case stg::ResponseCode::STARTING:
-                    std::cout << msg.message << std::endl;
-                    inGame = true;
+                    case stg::ResponseCode::STARTING: //commencer
+                    std::cout << msg.message << std::endl; //afficher debut
+                    inGame = true; //jeu commencer
                     break;
 
                     default:
