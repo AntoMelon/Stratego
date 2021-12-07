@@ -32,4 +32,4 @@
 *.app
 
 #Build directories
-build
+src/client/build
