@@ -46,7 +46,7 @@ namespace stg {
 
         tileTextures.insert(std::pair("lake_bottom_right", "lac_bottom_right.png"));
         tileTextures.insert(std::pair("lake_bottom_left", "lac_bottom_left.png"));
-        tileTextures.insert(std::pair("lake_top_right", "lac_right_top.png"));
+        tileTextures.insert(std::pair("lake_top_right", "lac_top_right.png"));
         tileTextures.insert(std::pair("lake_top_left", "lac_top_left.png"));
 
         pieceTextures.insert(std::pair(std::pair(PieceName::PION, Color::BLUE), "blue_piece.png"));
