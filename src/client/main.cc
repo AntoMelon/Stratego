@@ -104,6 +104,8 @@ int main() {
     board.setPiece(5,8,stg::Piece(stg::PieceName::PION,stg::Color::RED));
     board.setPiece(0,8,stg::Piece(stg::PieceName::ECLAIREUR,stg::Color::RED));
 
+    gf::Vector2i selected = gf::Vector2i(-1,-1); //piece selectionnée
+
     while (window.isOpen()) {
 
         gf::Event event;
@@ -111,6 +113,19 @@ int main() {
             switch (event.type) {
                 case gf::EventType::Closed:
                     window.close();
+                    break;
+                case gf::EventType::MouseButtonPressed:
+                    if (event.mouseButton.button == gf::MouseButton::Left) {
+                        std::cout << "Case séléctionnée : " << event.mouseButton.coords.x/64 << " " << event.mouseButton.coords.y/64 << std::endl;
+                        std::cout << "Piece séléctionnée : " << board.getPiece(event.mouseButton.coords.x/64,event.mouseButton.coords.y/64).getPieceName() << std::endl;
+                        if(selected == gf::Vector2i(-1,-1)) {
+                            selected = gf::Vector2i(event.mouseButton.coords.x/64,event.mouseButton.coords.y/64);
+                        } else {
+                            std::cout << "Case déplacée : " << event.mouseButton.coords.x/64 << " " << event.mouseButton.coords.y/64 << std::endl;
+                            board.movePiece(selected,gf::Vector2i(event.mouseButton.coords.x/64,event.mouseButton.coords.y/64));
+                            selected = gf::Vector2i(-1,-1);
+                        }
+                    }
                     break;
                 default:
                     break;

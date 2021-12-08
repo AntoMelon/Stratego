@@ -45,6 +45,8 @@ namespace stg {
         //Render the board
         void render(gf::RenderWindow &renderer);
 
+        std::pair<std::string, bool> movePiece(gf::Vector2i from, gf::Vector2i to);
+
     private:
         std::vector<std::vector<std::pair<Square,stg::Piece>>> board;
         std::map<std::pair<stg::PieceName, stg::Color>, std::string> pieceTextures;
