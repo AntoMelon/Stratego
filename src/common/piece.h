@@ -3,6 +3,7 @@
 
 #include <string>
 #include <map>
+#include <gf/RenderWindow.h>
 
 
 namespace stg {
@@ -20,7 +21,8 @@ namespace stg {
         COLONEL,
         GENERAL,
         MARECHAL,
-        BOMBE
+        BOMBE,
+        PION
     };
 
     enum Color {
@@ -49,7 +51,7 @@ namespace stg {
 
     template<typename Archive>
     Archive operator|(Archive& ar, stg::Piece& p) {
-        return ar | p.name | p.col;
+        return ar | p.getPieceName() | p.getColor();
     }
 }
 

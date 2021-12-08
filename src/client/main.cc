@@ -2,7 +2,7 @@
 #include <thread>
 
 #include "../common/protocol.h"
-#include "../common/board.h"
+#include "./libs/board.h"
 
 #include <gf/Queue.h>
 #include <gf/TcpSocket.h>
@@ -26,123 +26,13 @@ void threadPackets(gf::TcpSocket& socket,gf::Queue<gf::Packet>& queue) {
     }
 }
 
-namespace stg {
-
-    enum TileType{
-        Land,
-        River
-    };
-
-    enum PieceType{
-        Flag,
-        Spy,
-        Scout,
-        Deminer,
-        Sergeant,
-        Lieutenant,
-        Captain,
-        Commander,
-        Colonel,
-        General,
-        Marshal,
-        Bomb
-    };
-
-    struct Tile {
-        TileType type;
-        gf::Sprite sprite;
-    };
-
-    struct GraphicBoard {
-        std::vector<std::vector<Tile>> board;
-    };
-
-    struct Square {
-        TileType type;
-        bool walkable;
-    };
-
-    /*struct Piece {
-        PieceType type;
-        int strength;
-        bool canMove;
-    };*/
-
-}
-
 int main() {
 
     gf::Vector2i windowSize(640, 640);
     gf::Window window("Stratego en réseau", windowSize);
     gf::RenderWindow renderer(window);
 
-    gf::Texture land = gf::Texture(gf::Path("./resources/field.png"));
-    gf::Texture land_top_side = gf::Texture(gf::Path("./resources/field_top.png"));
-    gf::Texture land_bot_side = gf::Texture(gf::Path("./resources/field_bottom.png"));   //TODO : Poser la question d'un moyen plus efficace
-    gf::Texture land_right_side = gf::Texture(gf::Path("./resources/field_right.png"));
-    gf::Texture land_left_side = gf::Texture(gf::Path("./resources/field_left.png"));
-    gf::Texture land_top_left_edge = gf::Texture(gf::Path("./resources/field_top_left.png"));
-    gf::Texture land_top_right_edge = gf::Texture(gf::Path("./resources/field_top_right.png"));
-    gf::Texture land_bot_left_edge = gf::Texture(gf::Path("./resources/field_bottom_left.png"));
-    gf::Texture land_bot_right_edge = gf::Texture(gf::Path("./resources/field_bottom_right.png"));
-
-    gf::Texture base_piece_blue = gf::Texture(gf::Path("./resources/blue_piece.png"));
-    gf::Texture base_piece_red = gf::Texture(gf::Path("./resources/red_piece.png"));
-
-    stg::GraphicBoard board;
-    for (int i = 0; i < 10; i++) {
-        std::vector<stg::Tile> row;
-        for (int j = 0; j < 10; j++) {
-            stg::Tile tile;
-            tile.type = stg::Land;
-            bool left = false;
-            bool right = false;
-            bool top = false;
-            bool bot = false;
-            if(j==0) {
-                top = true;
-            }
-            if (i==0) {
-                left = true;
-            }
-            if (i==9) {
-                right = true;
-            }
-            if (j==9) {
-                bot = true;
-            }
-            if(left && top) {
-                tile.sprite = gf::Sprite(land_top_left_edge);
-            }
-            else if(left && bot) {
-                tile.sprite = gf::Sprite(land_bot_left_edge);
-            }
-            else if(right && top) {
-                tile.sprite = gf::Sprite(land_top_right_edge);
-            }
-            else if(right && bot) {
-                tile.sprite = gf::Sprite(land_bot_right_edge);
-            }
-            else if(left) {
-                tile.sprite = gf::Sprite(land_left_side);
-            }
-            else if(right) {
-                tile.sprite = gf::Sprite(land_right_side);
-            }
-            else if(top) {
-                tile.sprite = gf::Sprite(land_top_side);
-            }
-            else if(bot) {
-                tile.sprite = gf::Sprite(land_bot_side);
-            }
-            else {
-                tile.sprite = gf::Sprite(land);
-            }
-            tile.sprite.setPosition(gf::Vector2i(i * 64,j * 64));
-            row.push_back(tile);
-        }
-        board.board.push_back(row);
-    }
+    stg::Board board;
 
     gf::TcpSocket socket_client = gf::TcpSocket("localhost", "42690"); //parametre de connxeion
     bool inGame = false; //booleen jeu
@@ -185,6 +75,35 @@ int main() {
         }
     }
 
+    //Tests sur les pièces (PLAYGROUND)
+    board.setPiece(0,0,stg::Piece(stg::PieceName::MARECHAL,stg::Color::BLUE));
+    board.setPiece(1,0,stg::Piece(stg::PieceName::GENERAL,stg::Color::BLUE));
+    board.setPiece(2,0,stg::Piece(stg::PieceName::COLONEL,stg::Color::BLUE));
+    board.setPiece(3,0,stg::Piece(stg::PieceName::COMMANDANT,stg::Color::BLUE));
+    board.setPiece(4,0,stg::Piece(stg::PieceName::CAPITAINE,stg::Color::BLUE));
+    board.setPiece(5,0,stg::Piece(stg::PieceName::LIEUTENANT,stg::Color::BLUE));
+    board.setPiece(6,0,stg::Piece(stg::PieceName::SERGENT,stg::Color::BLUE));
+    board.setPiece(7,0,stg::Piece(stg::PieceName::DEMINEUR,stg::Color::BLUE));
+    board.setPiece(8,0,stg::Piece(stg::PieceName::ESPION,stg::Color::BLUE));
+    board.setPiece(9,0,stg::Piece(stg::PieceName::BOMBE,stg::Color::BLUE));
+    board.setPiece(4,1,stg::Piece(stg::PieceName::DRAPEAU,stg::Color::BLUE));
+    board.setPiece(5,1,stg::Piece(stg::PieceName::PION,stg::Color::BLUE));
+    board.setPiece(0,1,stg::Piece(stg::PieceName::ECLAIREUR,stg::Color::BLUE));
+
+    board.setPiece(0,9,stg::Piece(stg::PieceName::MARECHAL,stg::Color::RED));
+    board.setPiece(1,9,stg::Piece(stg::PieceName::GENERAL,stg::Color::RED));
+    board.setPiece(2,9,stg::Piece(stg::PieceName::COLONEL,stg::Color::RED));
+    board.setPiece(3,9,stg::Piece(stg::PieceName::COMMANDANT,stg::Color::RED));
+    board.setPiece(4,9,stg::Piece(stg::PieceName::CAPITAINE,stg::Color::RED));
+    board.setPiece(5,9,stg::Piece(stg::PieceName::LIEUTENANT,stg::Color::RED));
+    board.setPiece(6,9,stg::Piece(stg::PieceName::SERGENT,stg::Color::RED));
+    board.setPiece(7,9,stg::Piece(stg::PieceName::DEMINEUR,stg::Color::RED));
+    board.setPiece(8,9,stg::Piece(stg::PieceName::ESPION,stg::Color::RED));
+    board.setPiece(9,9,stg::Piece(stg::PieceName::BOMBE,stg::Color::RED));
+    board.setPiece(4,8,stg::Piece(stg::PieceName::DRAPEAU,stg::Color::RED));
+    board.setPiece(5,8,stg::Piece(stg::PieceName::PION,stg::Color::RED));
+    board.setPiece(0,8,stg::Piece(stg::PieceName::ECLAIREUR,stg::Color::RED));
+
     while (window.isOpen()) {
 
         gf::Event event;
@@ -200,29 +119,7 @@ int main() {
 
         renderer.clear(gf::Color::White);
 
-        for (int i = 0; i < 10; i++) {
-            for (int j = 0; j < 10; j++) {
-                renderer.draw(board.board[i][j].sprite);
-            }
-        }
-
-        for(int i = 0; i < 10; i++) {
-            for(int j = 0; j < 4; j++) {
-                gf::Sprite sprite;
-                sprite.setTexture(base_piece_blue);
-                sprite.setPosition(gf::Vector2i(i * 64,j * 64));
-                renderer.draw(sprite);
-            }
-        }
-
-        for(int i = 0; i < 10; i++) {
-            for(int j = 6; j < 10; j++) {
-                gf::Sprite sprite;
-                sprite.setTexture(base_piece_red);
-                sprite.setPosition(gf::Vector2i(i * 64,j * 64));
-                renderer.draw(sprite);
-            }
-        }
+        board.render(renderer);
 
         renderer.display();
     }

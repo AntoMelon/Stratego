@@ -1,10 +1,16 @@
 #include "board.h"
+#include "../client/libs/board.h"
+
 
 #include <cmath>
 
 namespace stg {
     Board::Board() {
 
+    }
+
+    const std::vector<std::vector<std::pair<Square, stg::Piece>>> &Board::getBoard() const {
+        return board;
     }
 
     bool Board::isMoveAllowed(int from_x,int from_y, int to_x, int to_y) const {
@@ -83,4 +89,5 @@ namespace stg {
     void Board::setPiece(int x, int y, const stg::Piece& piece) {
         board[x*10+y] = piece;
     }
+
 }
