@@ -1,6 +1,10 @@
 #include <iostream>
+#include <thread>
 
-//#include "../common/protocol.h"
+#include "../common/protocol.h"
+#include "../common/board.h"
+
+#include <gf/Queue.h>
 #include <gf/TcpSocket.h>
 #include <gf/Packet.h>
 #include <gf/Window.h>
@@ -9,11 +13,39 @@
 #include <gf/Color.h>
 #include <gf/Sprite.h>
 
+gf::Queue<gf::Packet> serverPackets;
+
+void threadPackets(gf::TcpSocket& socket,gf::Queue<gf::Packet>& queue) {
+    gf::Packet packet;
+    for(;;) {
+        gf::SocketStatus status = socket.recvPacket(packet);
+        if (status == gf::SocketStatus::Close) {
+            return;
+        }
+        queue.push(packet);
+    }
+}
+
 namespace stg {
 
     enum TileType{
         Land,
         River
+    };
+
+    enum PieceType{
+        Flag,
+        Spy,
+        Scout,
+        Deminer,
+        Sergeant,
+        Lieutenant,
+        Captain,
+        Commander,
+        Colonel,
+        General,
+        Marshal,
+        Bomb
     };
 
     struct Tile {
@@ -23,6 +55,22 @@ namespace stg {
 
     struct GraphicBoard {
         std::vector<std::vector<Tile>> board;
+    };
+
+    struct Square {
+        TileType type;
+        bool walkable;
+    };
+
+    struct Piece {
+        PieceType type;
+        int strength;
+        bool canMove;
+    };
+
+    class Board {
+        std::vector<std::vector<std::pair<Square,Piece>>> board;
+
     };
 
 }
@@ -43,6 +91,9 @@ int main() {
     gf::Texture land_bot_left_edge = gf::Texture(gf::Path("./resources/field_bottom_left.png"));
     gf::Texture land_bot_right_edge = gf::Texture(gf::Path("./resources/field_bottom_right.png"));
 
+    gf::Texture base_piece_blue = gf::Texture(gf::Path("./resources/blue_piece.png"));
+    gf::Texture base_piece_red = gf::Texture(gf::Path("./resources/red_piece.png"));
+
     stg::GraphicBoard board;
     for (int i = 0; i < 10; i++) {
         std::vector<stg::Tile> row;
@@ -53,16 +104,16 @@ int main() {
             bool right = false;
             bool top = false;
             bool bot = false;
-            if(i==0) {
+            if(j==0) {
                 top = true;
             }
-            if (j==0) {
+            if (i==0) {
                 left = true;
             }
-            if (j==9) {
+            if (i==9) {
                 right = true;
             }
-            if (i==9) {
+            if (j==9) {
                 bot = true;
             }
             if(left && top) {
@@ -98,6 +149,47 @@ int main() {
         board.board.push_back(row);
     }
 
+    gf::TcpSocket socket_client = gf::TcpSocket("localhost", "42690"); //parametre de connxeion
+    bool inGame = false; //booleen jeu
+
+    std::thread packetsThread(threadPackets,std::ref(socket_client),std::ref(serverPackets));
+    packetsThread.detach(); // indépendance thread/execution
+
+    stg::ClientHello data; //ressources à enoyer
+    data.name = "IT WORKS"; //parametre du nom
+
+    gf::Packet data2; //créer packet
+    data2.is(data); // serialiser packet
+
+    socket_client.sendPacket(data2); //envoie du packet
+
+    while (!inGame) { //en jeu
+        gf::Packet response; //packet reponse
+
+        if (serverPackets.poll(response)) { //si packet reçu
+            switch(response.getType()) { //e fonction du type
+                case stg::ServerMessage::type: //message
+                    stg::ServerMessage msg = response.as<stg::ServerMessage>(); //deserialiser
+
+                    switch(msg.code) { //code reçu
+                        case stg::ResponseCode::WAITING: //en attente
+                            std::cout << msg.message << std::endl; //afficher en attente
+                            break;
+
+                        case stg::ResponseCode::STARTING: //commencer
+                            std::cout << msg.message << std::endl; //afficher debut
+                            inGame = true; //jeu commencer
+                            break;
+
+                        default:
+                            break;
+                    }
+
+                    break;
+            }
+        }
+    }
+
     while (window.isOpen()) {
 
         gf::Event event;
@@ -119,8 +211,27 @@ int main() {
             }
         }
 
+        for(int i = 0; i < 10; i++) {
+            for(int j = 0; j < 4; j++) {
+                gf::Sprite sprite;
+                sprite.setTexture(base_piece_blue);
+                sprite.setPosition(gf::Vector2i(i * 64,j * 64));
+                renderer.draw(sprite);
+            }
+        }
+
+        for(int i = 0; i < 10; i++) {
+            for(int j = 6; j < 10; j++) {
+                gf::Sprite sprite;
+                sprite.setTexture(base_piece_red);
+                sprite.setPosition(gf::Vector2i(i * 64,j * 64));
+                renderer.draw(sprite);
+            }
+        }
+
         renderer.display();
     }
 
     return 0;
 }
+
