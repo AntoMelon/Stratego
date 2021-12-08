@@ -62,16 +62,11 @@ namespace stg {
         bool walkable;
     };
 
-    struct Piece {
+    /*struct Piece {
         PieceType type;
         int strength;
         bool canMove;
-    };
-
-    class Board {
-        std::vector<std::vector<std::pair<Square,Piece>>> board;
-
-    };
+    };*/
 
 }
 
