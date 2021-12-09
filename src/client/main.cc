@@ -12,6 +12,10 @@
 #include <gf/Event.h>
 #include <gf/Color.h>
 #include <gf/Sprite.h>
+#include <gf/Shapes.h>
+
+#define OFFSET_X 0
+#define OFFSET_Y 150
 
 gf::Queue<gf::Packet> serverPackets;
 
@@ -33,6 +37,7 @@ int main() {
     gf::RenderWindow renderer(window);
 
     stg::Board board;
+    gf::Texture cadre_selection(gf::Path("./resources/selected_indicator.png"));
 
     gf::TcpSocket socket_client = gf::TcpSocket("localhost", "42690"); //parametre de connxeion
     bool inGame = false; //booleen jeu
@@ -116,12 +121,9 @@ int main() {
                     break;
                 case gf::EventType::MouseButtonPressed:
                     if (event.mouseButton.button == gf::MouseButton::Left) {
-                        std::cout << "Case séléctionnée : " << event.mouseButton.coords.x/64 << " " << event.mouseButton.coords.y/64 << std::endl;
-                        std::cout << "Piece séléctionnée : " << board.getPiece(event.mouseButton.coords.x/64,event.mouseButton.coords.y/64).getPieceName() << std::endl;
                         if(selected == gf::Vector2i(-1,-1)) {
                             selected = gf::Vector2i(event.mouseButton.coords.x/64,event.mouseButton.coords.y/64);
                         } else {
-                            std::cout << "Case déplacée : " << event.mouseButton.coords.x/64 << " " << event.mouseButton.coords.y/64 << std::endl;
                             board.movePiece(selected,gf::Vector2i(event.mouseButton.coords.x/64,event.mouseButton.coords.y/64));
                             selected = gf::Vector2i(-1,-1);
                         }
@@ -135,6 +137,14 @@ int main() {
         renderer.clear(gf::Color::White);
 
         board.render(renderer);
+
+        //Render the selector if a piece is selected
+        if(selected != gf::Vector2i(-1,-1)) {
+            gf::Sprite sprite;
+            sprite.setTexture(cadre_selection);
+            sprite.setPosition(gf::Vector2i(selected.x*64,selected.y*64));
+            renderer.draw(sprite);
+        }
 
         renderer.display();
     }
