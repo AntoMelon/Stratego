@@ -33,3 +33,5 @@
 
 #Build directories
 src/client/build
+src/server/build
+build
