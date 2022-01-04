@@ -17,9 +17,8 @@
 #define OFFSET_X 0
 #define OFFSET_Y 150
 
-gf::Queue<gf::Packet> serverPackets;
 
-void threadPackets(gf::TcpSocket& socket,gf::Queue<gf::Packet>& queue) {
+auto threadPackets = [] (gf::TcpSocket &socket,gf::Queue<gf::Packet> &queue) {
     gf::Packet packet;
     for(;;) {
         gf::SocketStatus status = socket.recvPacket(packet);
@@ -28,16 +27,21 @@ void threadPackets(gf::TcpSocket& socket,gf::Queue<gf::Packet>& queue) {
         }
         queue.push(packet);
     }
-}
+};
 
 int main() {
+    gf::Queue<gf::Packet> serverPackets;
+
+    stg::Color myColor;
+    bool myTurn;
+
 
     gf::Vector2i windowSize(640, 640);
     gf::Window window("Stratego en réseau", windowSize);
     gf::RenderWindow renderer(window);
 
     stg::Board board;
-    gf::Texture cadre_selection(gf::Path("./resources/selected_indicator.png"));
+    //gf::Texture cadre_selection(gf::Path("./resources/selected_indicator.png"));
 
     gf::TcpSocket socket_client = gf::TcpSocket("localhost", "42690"); //parametre de connxeion
     bool inGame = false; //booleen jeu
@@ -46,7 +50,7 @@ int main() {
     packetsThread.detach(); // indépendance thread/execution
 
     stg::ClientHello data; //ressources à enoyer
-    data.name = "IT WORKS"; //parametre du nom
+    data.name = "client"; //parametre du nom
 
     gf::Packet data2; //créer packet
     data2.is(data); // serialiser packet
@@ -59,22 +63,37 @@ int main() {
         if (serverPackets.poll(response)) { //si packet reçu
             switch(response.getType()) { //e fonction du type
                 case stg::ServerMessage::type: //message
-                    stg::ServerMessage msg = response.as<stg::ServerMessage>(); //deserialiser
+                    {
+                        stg::ServerMessage msg = response.as<stg::ServerMessage>(); //deserialiser
 
-                    switch(msg.code) { //code reçu
-                        case stg::ResponseCode::WAITING: //en attente
-                            std::cout << msg.message << std::endl; //afficher en attente
-                            break;
+                        switch(msg.code) { //code reçu
+                            case stg::ResponseCode::WAITING: //en attente
+                                std::cout << msg.message << std::endl; //afficher en attente
+                                break;
 
-                        case stg::ResponseCode::STARTING: //commencer
-                            std::cout << msg.message << std::endl; //afficher debut
-                            inGame = true; //jeu commencer
-                            break;
+                            case stg::ResponseCode::STARTING: //commencer
+                                std::cout << msg.message << std::endl; //afficher debut
+                                inGame = true; //jeu commencer
+                                break;
 
-                        default:
-                            break;
+                            default:
+                                break;
+                        }
+
+                        break;
+                    }
+                
+                case stg::ServerAssignColor::type:
+                    {
+                        stg::ServerAssignColor assign = response.as<stg::ServerAssignColor>();
+                        myColor = assign.color;
+                        myTurn = assign.starting;
+
+                        std::cout << "You " << (myTurn ? "start " : "don't start ") << "and you are player " << myColor << std::endl;
+                        break;
                     }
 
+                default:
                     break;
             }
         }
@@ -139,12 +158,12 @@ int main() {
         board.render(renderer);
 
         //Render the selector if a piece is selected
-        if(selected != gf::Vector2i(-1,-1)) {
+        /*if(selected != gf::Vector2i(-1,-1)) {
             gf::Sprite sprite;
             sprite.setTexture(cadre_selection);
             sprite.setPosition(gf::Vector2i(selected.x*64,selected.y*64));
             renderer.draw(sprite);
-        }
+        }*/
 
         renderer.display();
     }

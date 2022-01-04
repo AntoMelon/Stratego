@@ -8,6 +8,8 @@
 #include <gf/Id.h>
 #include <gf/SerializationOps.h>
 
+#include "piece.h"
+
 using namespace gf::literals;
 
 namespace stg {
@@ -56,7 +58,7 @@ namespace stg {
 
     /*Server -> Client*/
 
-    struct ServerMessage{
+    struct ServerMessage {
         static constexpr gf::Id type = "ServerMessage"_id;
         stg::ResponseCode code;
         std::string message;
@@ -65,6 +67,17 @@ namespace stg {
     template<typename Archive>
     Archive operator|(Archive& ar, ServerMessage& response) {
         return ar | response.code | response.message;
+    }
+
+    struct ServerAssignColor {
+        static constexpr gf::Id type = "ServerAssignColor"_id;
+        stg::Color color;
+        bool starting;
+    };
+
+    template<typename Archive>
+    Archive operator|(Archive& ar, ServerAssignColor& assign) {
+        return ar | assign.color | assign.starting;
     }
 
     struct ServerMoveNotif {

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <random>
 
 #include <gf/TcpListener.h>
 #include <gf/Packet.h>
@@ -40,16 +41,38 @@ int main() {
             stg::ClientHello hello = packet.as<stg::ClientHello>();
             std::cout << "Hello " << hello.name << std::endl;
 
-            stg::ServerMessage resp;
-            resp.code = stg::ResponseCode::STARTING;
-            resp.message = "Both players have connected. Starting the game.";
-            packet.is(resp);
-
-            player1.sendPacket(packet);
-            player2.sendPacket(packet);
         }
     }
 
-    std::cout << "Both clients have connected" << std::endl;
+    std::random_device r;
+
+    std::default_random_engine engine(r());
+    std::uniform_int_distribution<int> uniform_dist(0,1);
+
+    int turn = uniform_dist(engine);
+    int p1Color = uniform_dist(engine);
+
+    stg::ServerAssignColor toP1, toP2;
+    toP1.color = p1Color == 0 ? stg::Color::RED : stg::Color::BLUE;
+    toP1.starting = turn == 0;
+
+    toP2.color = p1Color == 0 ? stg::Color::BLUE : stg::Color::RED;
+    toP2.starting = turn == 1;
+
+
+    packet.is(toP1);
+    player1.sendPacket(packet);
+
+    packet.is(toP2);
+    player2.sendPacket(packet);
+
+
+    stg::ServerMessage resp;
+    resp.code = stg::ResponseCode::STARTING;
+    resp.message = "Both players have connected. Starting the game.";
+    packet.is(resp);
+
+    player1.sendPacket(packet);
+    player2.sendPacket(packet);
 
 }
