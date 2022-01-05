@@ -5,15 +5,15 @@
 #include <cmath>
 
 namespace stg {
-    Board::Board() {
+    ServerBoard::ServerBoard() {
 
     }
 
-    const std::vector<std::vector<std::pair<Square, stg::Piece>>> &Board::getBoard() const {
+    const std::vector<std::vector<std::pair<Square, stg::Piece>>> &ServerBoard::getServerBoard() const {
         return board;
     }
 
-    bool Board::isMoveAllowed(int from_x,int from_y, int to_x, int to_y) const {
+    bool ServerBoard::isMoveAllowed(int from_x,int from_y, int to_x, int to_y) const {
         if (from_x == to_y && from_y == to_y) {
             return false;
         }
@@ -58,7 +58,7 @@ namespace stg {
         return (std::abs(from_x-to_x) == 1 && std::abs(from_y-to_y) == 0) || (std::abs(from_x-to_x) == 0 && std::abs(from_y-to_y) == 1);
     }
 
-    bool Board::movePiece(int from_x, int from_y, int to_x, int to_y) {
+    bool ServerBoard::movePiece(int from_x, int from_y, int to_x, int to_y) {
         if (!isMoveAllowed(from_x,from_y,to_x,to_y)) {
             return false;
         }
@@ -82,11 +82,11 @@ namespace stg {
         return true;
     }
 
-    stg::Piece Board::getPiece(int x, int y) const {
+    stg::Piece ServerBoard::getPiece(int x, int y) const {
         return board[x*10+y];
     }
 
-    void Board::setPiece(int x, int y, const stg::Piece& piece) {
+    void ServerBoard::setPiece(int x, int y, const stg::Piece& piece) {
         board[x*10+y] = piece;
     }
 

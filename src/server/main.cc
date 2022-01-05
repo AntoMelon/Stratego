@@ -4,7 +4,22 @@
 #include <gf/TcpListener.h>
 #include <gf/Packet.h>
 #include <gf/TcpSocket.h>
+
 #include "../common/protocol.h"
+#include "../common/board.h"
+
+void dealWithRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet &packet) {
+    switch (packet.getType()) {
+        case stg::ClientMoveRequest::type:
+        {
+            stg::ClientMoveRequest request = packet.as<stg::ClientMoveRequest>();
+        }
+        break;
+
+        default:
+        break;
+    }
+}
 
 int main() {
 
@@ -12,7 +27,9 @@ int main() {
     gf::TcpSocket player1, player2;
     gf::Packet packet;
 
-    while(!player1 || !player2) {
+    bool inGame = false;
+
+    while(!inGame) {
         gf::TcpSocket client = listener.accept();
         if (!player1) {
             player1 = std::move(client);
@@ -40,6 +57,8 @@ int main() {
             player2.recvPacket(packet);
             stg::ClientHello hello = packet.as<stg::ClientHello>();
             std::cout << "Hello " << hello.name << std::endl;
+
+            inGame = true;
 
         }
     }
@@ -74,5 +93,13 @@ int main() {
 
     player1.sendPacket(packet);
     player2.sendPacket(packet);
+
+    while (inGame) {
+        player1.recvPacket(packet);
+        dealWithRequest(player1,player2,packet);
+
+        player2.recvPacket(packet);
+        dealWithRequest(player2,player1,packet);
+    }
 
 }

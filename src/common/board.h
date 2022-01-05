@@ -7,9 +7,9 @@
 
 namespace stg {
 
-    class Board {
+    class ServerBoard {
         public:
-        Board();
+        ServerBoard();
         bool addPiece(int x, int y, stg::Piece& piece);
         bool removePiece(int x, int y);
 
@@ -26,7 +26,7 @@ namespace stg {
     };
 
     template<typename Archive>
-    Archive operator|(Archive& ar, stg::Board& board) {
+    Archive operator|(Archive& ar, stg::ServerBoard& board) {
         return ar;
     }
 }
