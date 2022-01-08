@@ -5,14 +5,30 @@
 #include <gf/Packet.h>
 #include <gf/TcpSocket.h>
 
-#include "../common/protocol.h"
-#include "../common/board.h"
+##include "../common/protocol.h"
+#include "./server_board.h"
 
-void dealWithRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet &packet) {
+void dealWithRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet &packet, stg::ServerBoard &board) {
+    gf::Packet to_send;
+
     switch (packet.getType()) {
         case stg::ClientMoveRequest::type:
         {
             stg::ClientMoveRequest request = packet.as<stg::ClientMoveRequest>();
+
+            if (!board.isMoveAllowed(request.from_x,request.from_y,request.to_x,request.to_y)) {
+                stg::ServerMessage response;
+                response.code = stg::ResponseCode::MOVE_ERR;
+                response.message = "Non-allowed move";
+
+                to_send.is(response);
+                sender.sendPacket(to_send);
+                return;
+            }
+
+            stg::ServerMoveNotif result;
+            
+
         }
         break;
 
@@ -94,12 +110,15 @@ int main() {
     player1.sendPacket(packet);
     player2.sendPacket(packet);
 
+    
+    stg::ServerBoard board;
+
     while (inGame) {
         player1.recvPacket(packet);
-        dealWithRequest(player1,player2,packet);
+        dealWithRequest(player1,player2,packet,board);
 
         player2.recvPacket(packet);
-        dealWithRequest(player2,player1,packet);
+        dealWithRequest(player2,player1,packet,board);
     }
 
 }
