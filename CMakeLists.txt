@@ -41,6 +41,8 @@ set_target_properties(stgclient
 add_executable(stgserver
         src/server/main.cc
         src/common/protocol.cpp src/common/protocol.h
+        src/server/server_board.cc src/server/server_board.h
+        src/common/piece.cc src/common/piece.h
         )
 
 target_link_libraries(stgserver
