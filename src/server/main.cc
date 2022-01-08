@@ -5,7 +5,7 @@
 #include <gf/Packet.h>
 #include <gf/TcpSocket.h>
 
-##include "../common/protocol.h"
+#include "../common/protocol.h"
 #include "./server_board.h"
 
 void dealWithRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet &packet, stg::ServerBoard &board) {
@@ -27,8 +27,45 @@ void dealWithRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet &pa
             }
 
             stg::ServerMoveNotif result;
-            
+            result.from_x = request.from_x;
+            result.from_y = request.from_y;
+            result.to_x = request.to_x;
+            result.to_y = request.to_y;
 
+            stg::Piece piece_atk = board.getPiece(result.from_x,result.from_y);
+            stg::Piece piece_def = board.getPiece(result.to_x,result.to_y);
+
+            result.str_atk = piece_atk.getPieceName();
+            result.str_def = piece_def.getPieceName();
+
+            int battle_result = piece_atk.battleResult(piece_def);
+
+            switch (battle_result) {
+                case -1:
+                result.atk_alive = false;
+                result.def_alive = true;
+                break;
+
+                case 0:
+                result.atk_alive = false;
+                result.def_alive = false;
+                break;
+
+                case 1:
+                result.atk_alive = true;
+                result.def_alive = false;
+                break;
+
+                default:
+                break;
+            }
+
+            board.movePiece(result.from_x,result.from_y,result.to_x,result.to_y);
+
+            to_send.is(result);
+
+            sender.sendPacket(to_send);
+            other.sendPacket(to_send);
         }
         break;
 

@@ -18,7 +18,8 @@ namespace stg {
         WAITING,
         STARTING,
         BOARD_OK,
-        BOARD_ERR
+        BOARD_ERR,
+        MOVE_ERR
     };
 
 
