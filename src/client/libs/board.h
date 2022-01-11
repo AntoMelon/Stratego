@@ -9,6 +9,8 @@
 #include <gf/Texture.h>
 #include <gf/Path.h>
 #include <gf/ResourceManager.h>
+#include <gf/ViewContainer.h>
+#include <gf/Views.h>
 
 namespace stg {
 
@@ -43,7 +45,7 @@ namespace stg {
         void setPiece(int x, int y, Piece piece);
 
         //Render the board
-        void render(gf::RenderWindow &renderer);
+        void render(gf::RenderWindow &renderer, gf::AdaptativeView* view);
 
         std::pair<std::string, bool> movePiece(gf::Vector2i from, gf::Vector2i to);
 

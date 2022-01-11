@@ -5,15 +5,18 @@
 #include <cmath>
 
 namespace stg {
+
     ServerBoard::ServerBoard() : board({}) {
 
     }
 
     bool ServerBoard::isMoveAllowed(int from_x,int from_y, int to_x, int to_y) const {
-        if (from_x == to_y && from_y == to_y) {
+
+        //same place
+        if (from_x == to_x && from_y == to_y) {
             return false;
         }
-        
+
         stg::Piece to_move = getPiece(from_x,from_y);
 
         if (to_move.getPieceName() == stg::PieceName::NONE || to_move.getPieceName() == stg::PieceName::LAKE || to_move.getPieceName() == stg::PieceName::DRAPEAU || to_move.getPieceName() == stg::PieceName::BOMBE) {

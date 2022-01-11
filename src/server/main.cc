@@ -8,10 +8,20 @@
 #include "../common/protocol.h"
 #include "./server_board.h"
 
+/*
+ * @brief To sending and receive packets from/to client
+ * @param gf::TcpSocket &sender : socket from the sender
+ * @param gf::TcpSocket &other : socket from other client
+ * @param gf::Packet &packet : packet sent
+ * @param stg::ServerBoard &board : board of the game
+ */
 void dealWithRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet &packet, stg::ServerBoard &board) {
+
     gf::Packet to_send;
 
     switch (packet.getType()) {
+
+        //move request
         case stg::ClientMoveRequest::type:
         {
             stg::ClientMoveRequest request = packet.as<stg::ClientMoveRequest>();

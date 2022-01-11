@@ -90,7 +90,8 @@ namespace stg {
         return board[x][y].second;
     }
 
-    void Board::render(gf::RenderWindow &renderer) {
+    void Board::render(gf::RenderWindow &renderer, gf::AdaptativeView *view) {
+        renderer.setView(*view);
         for(int i = 0; i < 10; i++) {
             for(int j = 0; j < 10; j++) {
                 gf::Sprite sprite;
