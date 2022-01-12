@@ -1,6 +1,8 @@
 #include <iostream>
 #include <random>
 
+#include <map>
+
 #include <gf/TcpListener.h>
 #include <gf/Packet.h>
 #include <gf/TcpSocket.h>
@@ -9,7 +11,7 @@
 #include "./server_board.h"
 
 /*
- * @brief To sending and receive packets from/to client
+ * @brief To deal with paquets sent by a client, interpret and treat requests
  * @param gf::TcpSocket &sender : socket from the sender
  * @param gf::TcpSocket &other : socket from other client
  * @param gf::Packet &packet : packet sent
@@ -50,6 +52,9 @@ void dealWithRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet &pa
 
             int battle_result = piece_atk.battleResult(piece_def);
 
+            result.atk_alive = true;
+            result.def_alive = true;
+
             switch (battle_result) {
                 case -1:
                 result.atk_alive = false;
@@ -76,12 +81,73 @@ void dealWithRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet &pa
 
             sender.sendPacket(to_send);
             other.sendPacket(to_send);
+            break;
         }
-        break;
+
+        case stg::ClientBoardSubmit::type:
+        {
+            stg::ClientBoardSubmit submit = packet.as<ClientBoardSubmit>();
+
+            bool boardOk = isSubmittedBoardOk(submit.board);
+
+            stg::ServerMessage response;
+            
+            if (boardOk) {
+                response.code = stg::ResponseCode::BOARD_OK;
+                response.message = "Board is valid.";
+            } else {
+                response.code = stg::ResponseCode::BOARD_ERR;
+                response.message = "Board is invalid.";
+            }
+
+            to_send.is(response);
+            sender.sendPacket(to_send);
+
+            break;
+        }
 
         default:
         break;
     }
+}
+
+bool isSubmittedBoardOk(std::vector<stg::Piece> &board) {
+    if (board.size() != 40) {
+        return false;
+    }
+
+    std::map<stg::PieceName,int> expected = {{stg::PieceName::DRAPEAU,1},
+                                                {stg::PieceName::ESPION,1},
+                                                {stg::PieceName::ECLAIREUR,8},
+                                                {stg::PieceName::DEMINEUR,5},
+                                                {stg::PieceName::SERGENT,4},
+                                                {stg::PieceName::LIEUTENANT,4},
+                                                {stg::PieceName::CAPITAINE,4},
+                                                {stg::PieceName::COMMANDANT,3},
+                                                {stg::PieceName::COLONEL,2},
+                                                {stg::PieceName::GENERAL,1},
+                                                {stg::PieceName::MARECHAL,1},
+                                                {stg::PieceName::BOMBE,6}};
+
+    std::map<stg::PieceName,int> found = {{stg::PieceName::DRAPEAU,0},
+                                                {stg::PieceName::ESPION,0},
+                                                {stg::PieceName::ECLAIREUR,0},
+                                                {stg::PieceName::DEMINEUR,0},
+                                                {stg::PieceName::SERGENT,0},
+                                                {stg::PieceName::LIEUTENANT,0},
+                                                {stg::PieceName::CAPITAINE,0},
+                                                {stg::PieceName::COMMANDANT,0},
+                                                {stg::PieceName::COLONEL,0},
+                                                {stg::PieceName::GENERAL,0},
+                                                {stg::PieceName::MARECHAL,0},
+                                                {stg::PieceName::BOMBE,0}};
+
+
+    for (auto p : board) {
+        found[p.getPieceName()] += 1;
+    }
+
+    return expected == found;
 }
 
 int main() {
@@ -162,10 +228,14 @@ int main() {
 
     while (inGame) {
         player1.recvPacket(packet);
-        dealWithRequest(player1,player2,packet,board);
+        if (turn == 0) {
+            dealWithRequest(player1,player2,packet,board);
+        }
 
         player2.recvPacket(packet);
-        dealWithRequest(player2,player1,packet,board);
+        if (turn == 1) {
+            dealWithRequest(player2,player1,packet,board);
+        }
     }
 
 }

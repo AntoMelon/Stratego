@@ -3,6 +3,8 @@
 //
 
 #include <string>
+#include <vector>
+
 #include <gf/Packet.h>
 
 #include <gf/Id.h>
@@ -50,11 +52,13 @@ namespace stg {
 
     struct ClientBoardSubmit {
         static constexpr gf::Id type = "ClientBoardSubmit"_id;
+
+        std::vector<stg::Piece> board;
     };
 
     template<typename Archive> 
     Archive operator|(Archive& ar, ClientBoardSubmit& submit) {
-        
+        return ar | submit.board;
     }
 
     /*Server -> Client*/
