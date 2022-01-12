@@ -164,7 +164,6 @@ int main() {
 
     while (window.isOpen()) {
         gf::Event event;
-
         while (window.pollEvent(event)) {
             switch (event.type) {
                 case gf::EventType::Closed:
@@ -173,10 +172,9 @@ int main() {
                 case gf::EventType::MouseButtonPressed:
                     if (event.mouseButton.button == gf::MouseButton::Left) {
                         if(selected == gf::Vector2i(-1,-1)) {
-                            //calcul pour retrouver la position de la pièce séléctionnée
-                            selected = gf::Vector2i(event.mouseButton.coords.x/(ScreenSize.y/10), (event.mouseButton.coords.y - ((ScreenSize.x - ScreenSize.y) / 2))/(ScreenSize.y/10));
+                            selected = board.convert_mouse_coord_to_case(event.mouseButton.coords.x, event.mouseButton.coords.y, window.getSize().x, window.getSize().y);
                         } else {
-                            board.movePiece(selected, gf::Vector2i(event.mouseButton.coords.x/(ScreenSize.y/10), (event.mouseButton.coords.y - ((ScreenSize.x - ScreenSize.y) / 2))/(ScreenSize.y/10)));
+                            board.movePiece(selected, board.convert_mouse_coord_to_case(event.mouseButton.coords.x, event.mouseButton.coords.y, window.getSize().x, window.getSize().y));
                             selected = gf::Vector2i(-1,-1);
                         }
                     }

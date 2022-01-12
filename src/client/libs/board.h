@@ -47,6 +47,8 @@ namespace stg {
         //Render the board
         void render(gf::RenderWindow &renderer, gf::AdaptativeView* view);
 
+        gf::Vector2i convert_mouse_coord_to_case(int mouse_x, int mouse_y, int window_x, int window_y);
+
         std::pair<std::string, bool> movePiece(gf::Vector2i from, gf::Vector2i to);
 
     private:
