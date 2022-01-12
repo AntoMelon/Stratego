@@ -10,6 +10,45 @@
 #include "../common/protocol.h"
 #include "./server_board.h"
 
+bool isSubmittedBoardOk(std::vector<stg::Piece> &board) {
+    if (board.size() != 40) {
+        return false;
+    }
+
+    std::map<stg::PieceName,int> expected = {{stg::PieceName::DRAPEAU,1},
+                                                {stg::PieceName::ESPION,1},
+                                                {stg::PieceName::ECLAIREUR,8},
+                                                {stg::PieceName::DEMINEUR,5},
+                                                {stg::PieceName::SERGENT,4},
+                                                {stg::PieceName::LIEUTENANT,4},
+                                                {stg::PieceName::CAPITAINE,4},
+                                                {stg::PieceName::COMMANDANT,3},
+                                                {stg::PieceName::COLONEL,2},
+                                                {stg::PieceName::GENERAL,1},
+                                                {stg::PieceName::MARECHAL,1},
+                                                {stg::PieceName::BOMBE,6}};
+
+    std::map<stg::PieceName,int> found = {{stg::PieceName::DRAPEAU,0},
+                                                {stg::PieceName::ESPION,0},
+                                                {stg::PieceName::ECLAIREUR,0},
+                                                {stg::PieceName::DEMINEUR,0},
+                                                {stg::PieceName::SERGENT,0},
+                                                {stg::PieceName::LIEUTENANT,0},
+                                                {stg::PieceName::CAPITAINE,0},
+                                                {stg::PieceName::COMMANDANT,0},
+                                                {stg::PieceName::COLONEL,0},
+                                                {stg::PieceName::GENERAL,0},
+                                                {stg::PieceName::MARECHAL,0},
+                                                {stg::PieceName::BOMBE,0}};
+
+
+    for (auto p : board) {
+        found[p.getPieceName()] += 1;
+    }
+
+    return expected == found;
+}
+
 /*
  * @brief To deal with paquets sent by a client, interpret and treat requests
  * @param gf::TcpSocket &sender : socket from the sender
@@ -86,7 +125,7 @@ void dealWithRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet &pa
 
         case stg::ClientBoardSubmit::type:
         {
-            stg::ClientBoardSubmit submit = packet.as<ClientBoardSubmit>();
+            stg::ClientBoardSubmit submit = packet.as<stg::ClientBoardSubmit>();
 
             bool boardOk = isSubmittedBoardOk(submit.board);
 
@@ -109,45 +148,6 @@ void dealWithRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet &pa
         default:
         break;
     }
-}
-
-bool isSubmittedBoardOk(std::vector<stg::Piece> &board) {
-    if (board.size() != 40) {
-        return false;
-    }
-
-    std::map<stg::PieceName,int> expected = {{stg::PieceName::DRAPEAU,1},
-                                                {stg::PieceName::ESPION,1},
-                                                {stg::PieceName::ECLAIREUR,8},
-                                                {stg::PieceName::DEMINEUR,5},
-                                                {stg::PieceName::SERGENT,4},
-                                                {stg::PieceName::LIEUTENANT,4},
-                                                {stg::PieceName::CAPITAINE,4},
-                                                {stg::PieceName::COMMANDANT,3},
-                                                {stg::PieceName::COLONEL,2},
-                                                {stg::PieceName::GENERAL,1},
-                                                {stg::PieceName::MARECHAL,1},
-                                                {stg::PieceName::BOMBE,6}};
-
-    std::map<stg::PieceName,int> found = {{stg::PieceName::DRAPEAU,0},
-                                                {stg::PieceName::ESPION,0},
-                                                {stg::PieceName::ECLAIREUR,0},
-                                                {stg::PieceName::DEMINEUR,0},
-                                                {stg::PieceName::SERGENT,0},
-                                                {stg::PieceName::LIEUTENANT,0},
-                                                {stg::PieceName::CAPITAINE,0},
-                                                {stg::PieceName::COMMANDANT,0},
-                                                {stg::PieceName::COLONEL,0},
-                                                {stg::PieceName::GENERAL,0},
-                                                {stg::PieceName::MARECHAL,0},
-                                                {stg::PieceName::BOMBE,0}};
-
-
-    for (auto p : board) {
-        found[p.getPieceName()] += 1;
-    }
-
-    return expected == found;
 }
 
 int main() {
