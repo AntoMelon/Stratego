@@ -39,11 +39,11 @@ int main() {
     stg::Color myColor;
     bool myTurn;
 
-    static constexpr gf::Vector2i ScreenSize(640, 640);
+    static constexpr gf::Vector2i ScreenSize(860, 640);
 
     gf::Window window("Stratego online", ScreenSize);
     gf::RenderWindow renderer(window);
-    gf::RectF world = gf::RectF::fromPositionSize({ 0, 0 }, { 640, 640}); //monde du jeu
+    gf::RectF world = gf::RectF::fromPositionSize({ 0, 0 }, {640, 640}); //monde du jeu
     gf::RectF extendedWorld = world.grow(100);
 
     //vue
@@ -168,6 +168,14 @@ int main() {
             switch (event.type) {
                 case gf::EventType::Closed:
                     window.close();
+                    break;
+                case gf::EventType::Resized:
+                    if (window.getSize().x < 860) {
+                        window.setSize(gf::Vector2i(840, window.getSize().y));
+                    }
+                    if (window.getSize().y < 640) {
+                        window.setSize(gf::Vector2i(window.getSize().x, 640));
+                    }
                     break;
                 case gf::EventType::MouseButtonPressed:
                     if (event.mouseButton.button == gf::MouseButton::Left) {

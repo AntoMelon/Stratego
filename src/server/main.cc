@@ -86,7 +86,7 @@ void dealWithRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet &pa
 
         case stg::ClientBoardSubmit::type:
         {
-            stg::ClientBoardSubmit submit = packet.as<ClientBoardSubmit>();
+            /*stg::ClientBoardSubmit submit = packet.as<ClientBoardSubmit>();
 
             bool boardOk = isSubmittedBoardOk(submit.board);
 
@@ -103,7 +103,7 @@ void dealWithRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet &pa
             to_send.is(response);
             sender.sendPacket(to_send);
 
-            break;
+            break;*/
         }
 
         default:
