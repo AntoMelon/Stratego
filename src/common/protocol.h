@@ -58,7 +58,7 @@ namespace stg {
 
     template<typename Archive> 
     Archive operator|(Archive& ar, ClientBoardSubmit& submit) {
-        return ar;
+        return ar | submit.board;
     }
 
     /*Server -> Client*/
