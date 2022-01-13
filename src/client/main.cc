@@ -20,6 +20,13 @@
 #define OFFSET_X 0
 #define OFFSET_Y 150
 
+enum PLAYING_STATE {
+    CONNEXION,
+    PLACEMENT,
+    IN_GAME,
+    END
+};
+
 auto threadPackets = [] (gf::TcpSocket &socket,gf::Queue<gf::Packet> &queue) {
     gf::Packet packet;
     for(;;) {
@@ -36,8 +43,9 @@ int main() {
 
     gf::Queue<gf::Packet> serverPackets;
 
-    stg::Color myColor;
-    bool myTurn;
+    stg::Color myColor = stg::Color::BLUE;
+    PLAYING_STATE state = PLAYING_STATE::CONNEXION;
+    bool myTurn = false;
 
     static constexpr gf::Vector2i ScreenSize(860, 640);
 
@@ -68,15 +76,12 @@ int main() {
     gf::RectangleShape frame(maxiViewport.getSize() * ScreenSize);
     frame.setPosition(maxiViewport.getPosition() * ScreenSize);
     frame.setColor(gf::Color::Transparent);
-    frame.setOutlineColor(gf::Color::Red);
-    frame.setOutlineThickness(2.0f);
     renderer.clear(gf::Color::Black);
 
     stg::Board board;
     //gf::Texture cadre_selection(gf::Path("./resources/selected_indicator.png"));
 
     gf::TcpSocket socket_client = gf::TcpSocket("localhost", "42690"); //parametre de connxeion
-    bool inGame = false; //booleen jeu
 
     std::thread packetsThread(threadPackets,std::ref(socket_client),std::ref(serverPackets));
     packetsThread.detach(); // indépendance thread/execution
@@ -89,7 +94,14 @@ int main() {
 
     socket_client.sendPacket(data2); //envoie du packet
 
-    while (!inGame) { //en jeu
+    //zone de placement des pions
+    gf::RectangleShape zone_to_place;
+    zone_to_place.setSize({636, 252});
+    zone_to_place.setColor(gf::Color::Transparent);
+    zone_to_place.setOutlineThickness(2);
+
+    while (state == PLAYING_STATE::CONNEXION) { //en attente du début de partie
+
         gf::Packet response; //packet reponse
 
         if (serverPackets.poll(response)) { //si packet reçu
@@ -105,7 +117,7 @@ int main() {
 
                         case stg::ResponseCode::STARTING: //commencer
                             std::cout << msg.message << std::endl; //afficher debut
-                            inGame = true; //jeu commencer
+                            state = PLAYING_STATE::PLACEMENT; //jeu commencer
                             break;
 
                         default:
@@ -131,35 +143,62 @@ int main() {
         }
     }
 
-    //Tests sur les pièces (PLAYGROUND)
-    board.setPiece(0,0,stg::Piece(stg::PieceName::MARECHAL,stg::Color::BLUE));
-    board.setPiece(1,0,stg::Piece(stg::PieceName::GENERAL,stg::Color::BLUE));
-    board.setPiece(2,0,stg::Piece(stg::PieceName::COLONEL,stg::Color::BLUE));
-    board.setPiece(3,0,stg::Piece(stg::PieceName::COMMANDANT,stg::Color::BLUE));
-    board.setPiece(4,0,stg::Piece(stg::PieceName::CAPITAINE,stg::Color::BLUE));
-    board.setPiece(5,0,stg::Piece(stg::PieceName::LIEUTENANT,stg::Color::BLUE));
-    board.setPiece(6,0,stg::Piece(stg::PieceName::SERGENT,stg::Color::BLUE));
-    board.setPiece(7,0,stg::Piece(stg::PieceName::DEMINEUR,stg::Color::BLUE));
-    board.setPiece(8,0,stg::Piece(stg::PieceName::ESPION,stg::Color::BLUE));
-    board.setPiece(9,0,stg::Piece(stg::PieceName::BOMBE,stg::Color::BLUE));
-    board.setPiece(4,1,stg::Piece(stg::PieceName::DRAPEAU,stg::Color::BLUE));
-    board.setPiece(5,1,stg::Piece(stg::PieceName::PION,stg::Color::BLUE));
-    board.setPiece(0,1,stg::Piece(stg::PieceName::ECLAIREUR,stg::Color::BLUE));
+    //set fore placement
+    int x = 0, y = 0;
+    if (myColor == stg::Color::RED) {
+        zone_to_place.setOutlineColor(gf::Color::Red);
+        zone_to_place.setPosition({2, 384});
+    } else {
+        zone_to_place.setOutlineColor(gf::Color::Blue);
+        zone_to_place.setPosition({2, 2});
+        y = 6;
+    }
+    while (x < 8) {
+        board.setPiece(x,y,stg::Piece(stg::PieceName::ECLAIREUR,myColor));
+        ++x;
+    }
+    while (x < 10) {
+        board.setPiece(x,y,stg::Piece(stg::PieceName::COLONEL,myColor));
+        ++x;
+    }
+    x = 0;
+    ++y;
+    while (x < 6) {
+        board.setPiece(x,y,stg::Piece(stg::PieceName::BOMBE,myColor));
+        ++x;
+    }
+    while (x < 10) {
+        board.setPiece(x,y,stg::Piece(stg::PieceName::SERGENT,myColor));
+        ++x;
+    }
+    x = 0;
+    ++y;
+    while (x < 5) {
+        board.setPiece(x,y,stg::Piece(stg::PieceName::DEMINEUR,myColor));
+        ++x;
+    }
+    while (x < 9) {
+        board.setPiece(x,y,stg::Piece(stg::PieceName::LIEUTENANT,myColor));
+        ++x;
+    }
+    board.setPiece(x,y,stg::Piece(stg::PieceName::MARECHAL,myColor));
+    x = 0;
+    ++y;
+    while (x < 4) {
+        board.setPiece(x,y,stg::Piece(stg::PieceName::CAPITAINE,myColor));
+        ++x;
+    }
+    while (x < 7) {
+        board.setPiece(x,y,stg::Piece(stg::PieceName::COMMANDANT,myColor));
+        ++x;
+    }
+    board.setPiece(x,y,stg::Piece(stg::PieceName::GENERAL,myColor));
+    ++x;
+    board.setPiece(x,y,stg::Piece(stg::PieceName::ESPION,myColor));
+    ++x;
+    board.setPiece(x,y,stg::Piece(stg::PieceName::DRAPEAU,myColor));
 
-    board.setPiece(0,9,stg::Piece(stg::PieceName::MARECHAL,stg::Color::RED));
-    board.setPiece(1,9,stg::Piece(stg::PieceName::GENERAL,stg::Color::RED));
-    board.setPiece(2,9,stg::Piece(stg::PieceName::COLONEL,stg::Color::RED));
-    board.setPiece(3,9,stg::Piece(stg::PieceName::COMMANDANT,stg::Color::RED));
-    board.setPiece(4,9,stg::Piece(stg::PieceName::CAPITAINE,stg::Color::RED));
-    board.setPiece(5,9,stg::Piece(stg::PieceName::LIEUTENANT,stg::Color::RED));
-    board.setPiece(6,9,stg::Piece(stg::PieceName::SERGENT,stg::Color::RED));
-    board.setPiece(7,9,stg::Piece(stg::PieceName::DEMINEUR,stg::Color::RED));
-    board.setPiece(8,9,stg::Piece(stg::PieceName::ESPION,stg::Color::RED));
-    board.setPiece(9,9,stg::Piece(stg::PieceName::BOMBE,stg::Color::RED));
-    board.setPiece(4,8,stg::Piece(stg::PieceName::DRAPEAU,stg::Color::RED));
-    board.setPiece(5,8,stg::Piece(stg::PieceName::PION,stg::Color::RED));
-    board.setPiece(0,8,stg::Piece(stg::PieceName::ECLAIREUR,stg::Color::RED));
-
+    //game
     gf::Vector2i selected = gf::Vector2i(-1,-1);
 
     while (window.isOpen()) {
@@ -194,31 +233,36 @@ int main() {
             views.processEvent(event);
         }
 
-        renderer.clear();
+        if (state == PLAYING_STATE::PLACEMENT) {
 
-        //gestion des vues
-        currentView->setViewport(maxiViewport);
-        renderer.setView(*currentView);
-        renderer.draw(extendedBackground);
-        renderer.draw(background);
-        board.render(renderer, currentView);
-        gf::RectI viewport = renderer.getViewport(*currentView);
-        frame.setPosition(viewport.getPosition());
-        frame.setSize(viewport.getSize());
+            renderer.clear();
 
-        //afficher dans la fenêtre
-        renderer.setView(screenView);
-        renderer.draw(frame);
-        renderer.draw(hud_s);
+            //gestion des vues
+            currentView->setViewport(maxiViewport);
+            renderer.setView(*currentView);
+            renderer.draw(extendedBackground);
+            renderer.draw(background);
+            board.render(renderer, currentView);
+            renderer.draw(zone_to_place);
+            gf::RectI viewport = renderer.getViewport(*currentView);
+            frame.setPosition(viewport.getPosition());
+            frame.setSize(viewport.getSize());
 
-        /*if(selected != gf::Vector2i(-1,-1)) {
-            gf::Sprite sprite;
-            sprite.setTexture(cadre_selection);
-            sprite.setPosition(gf::Vector2i(selected.x*64,selected.y*64));
-            renderer.draw(sprite);
-        }*/
+            //afficher dans la fenêtre
+            renderer.setView(screenView);
+            renderer.draw(frame);
+            renderer.draw(hud_s);
 
-        renderer.display();
+            /*if(selected != gf::Vector2i(-1,-1)) {
+                gf::Sprite sprite;
+                sprite.setTexture(cadre_selection);
+                sprite.setPosition(gf::Vector2i(selected.x*64,selected.y*64));
+                renderer.draw(sprite);
+            }*/
+
+            renderer.display();
+
+        }
 
     }
 
