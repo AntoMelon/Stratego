@@ -34,6 +34,7 @@ namespace stg {
     class Piece {
 
         public:
+            Piece() = default;
             Piece(PieceName _name,Color _col);
 
             PieceName getPieceName() const;
@@ -43,15 +44,14 @@ namespace stg {
             
             static Piece makeBlankPiece();
 
-        private:
-        PieceName name;
-        Color col;
+            PieceName name;
+            Color col;
 
     };
 
     template<typename Archive>
     Archive operator|(Archive& ar, stg::Piece& p) {
-        return ar | p.getPieceName() | p.getColor();
+        return ar | p.name | p.col;
     }
 }
 
