@@ -134,6 +134,7 @@ void dealWithRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet &pa
             if (boardOk) {
                 response.code = stg::ResponseCode::BOARD_OK;
                 response.message = "Board is valid.";
+                board.importSubmittedBoard(submit.color,submit.board);
             } else {
                 response.code = stg::ResponseCode::BOARD_ERR;
                 response.message = "Board is invalid.";

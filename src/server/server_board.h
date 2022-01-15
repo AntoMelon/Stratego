@@ -20,6 +20,8 @@ namespace stg {
         stg::Piece getPiece(int x, int y) const;
         void setPiece(int x, int y, const stg::Piece& piece);
 
+        void importSubmittedBoard(stg::Color color, const std::vector<stg::Piece>& submitted);
+
 
         private:
         std::vector<stg::Piece> board;

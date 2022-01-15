@@ -53,12 +53,13 @@ namespace stg {
     struct ClientBoardSubmit {
         static constexpr gf::Id type = "ClientBoardSubmit"_id;
 
+        stg::Color color;
         std::vector<stg::Piece> board;
     };
 
     template<typename Archive> 
     Archive operator|(Archive& ar, ClientBoardSubmit& submit) {
-        return ar | submit.board;
+        return ar | submit.color | submit.board;
     }
 
     /*Server -> Client*/

@@ -89,4 +89,17 @@ namespace stg {
         board[x*10+y] = piece;
     }
 
+    void ServerBoard::importSubmittedBoard(stg::Color color, const std::vector<stg::Piece>& submitted) {
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < 10; ++j) {
+
+                if (color == stg::Color::RED) {
+                    setPiece(i,j,submitted[i*10+j]);
+                } else {
+                    setPiece(6+i,j,submitted[i*10+j]);
+                }
+            }
+        }
+    }
+
 }
