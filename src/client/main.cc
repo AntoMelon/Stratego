@@ -199,10 +199,6 @@ int main() {
     ++x;
     board.setPiece(x,y,stg::Piece(stg::PieceName::DRAPEAU,myColor));
 
-    /*
-     * TODO: détecter la fin du placement des pièces pour un joueur et attendre le second pour commencer la partie.
-     */
-
     //game
     gf::Vector2i selected = gf::Vector2i(-1,-1);
     gf::Vector2i mouse_click = selected;
@@ -233,6 +229,22 @@ int main() {
                             selected = gf::Vector2i(-1,-1);
                         }
                     }
+                    if (state == PLAYING_STATE::PLACEMENT) {
+                        if (event.mouseButton.button == gf::MouseButton::Left) {
+                            if ((event.mouseButton.coords.x < 128) && (event.mouseButton.coords.y < 26)) {
+                                std::cout << "click" << std::endl;
+                                stg::ClientBoardSubmit firstBorad; //ressources à envoyer
+                                firstBorad.color = myColor; //parametre du nom
+                                std::cout << "ressource ok" << std::endl;
+                                gf::Packet packet_board; //créer packet
+                                packet_board.is(firstBorad); // serialiser packet
+                                std::cout << "packet ok" << std::endl;
+                                socket_client.sendPacket(packet_board); //envoie du packet
+                                std::cout << "envoyer!" << std::endl;
+                            }
+                        }
+                        state = IN_GAME;
+                    }
                     break;
                 default:
                     break;
@@ -241,7 +253,7 @@ int main() {
             views.processEvent(event);
         }
 
-        if (state == PLAYING_STATE::PLACEMENT) {
+        if (state == PLAYING_STATE::PLACEMENT || state == PLAYING_STATE::IN_GAME) {
 
             renderer.clear();
 
@@ -251,7 +263,9 @@ int main() {
             renderer.draw(extendedBackground);
             renderer.draw(background);
             board.render(renderer, currentView);
-            renderer.draw(zone_to_place);
+            if (state == PLAYING_STATE::PLACEMENT) {
+                renderer.draw(zone_to_place);
+            }
             gf::RectI viewport = renderer.getViewport(*currentView);
             frame.setPosition(viewport.getPosition());
             frame.setSize(viewport.getSize());
@@ -259,7 +273,9 @@ int main() {
             //afficher dans la fenêtre
             renderer.setView(screenView);
             renderer.draw(frame);
-            renderer.draw(hud_s);
+            if (state == PLAYING_STATE::PLACEMENT) {
+                renderer.draw(hud_s);
+            }
 
             /*if(selected != gf::Vector2i(-1,-1)) {
                 gf::Sprite sprite;

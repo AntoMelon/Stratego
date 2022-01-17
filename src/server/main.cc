@@ -46,6 +46,8 @@ bool isSubmittedBoardOk(std::vector<stg::Piece> &board) {
         found[p.getPieceName()] += 1;
     }
 
+    std::cout << "plateau reçu" << std::endl;
+
     return expected == found;
 }
 
