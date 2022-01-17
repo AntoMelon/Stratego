@@ -9,6 +9,7 @@
 #include <gf/Packet.h>
 #include <gf/Window.h>
 #include <gf/RenderWindow.h>
+#include <gf/RenderTarget.h>
 #include <gf/Event.h>
 #include <gf/Color.h>
 #include <gf/Sprite.h>
@@ -43,7 +44,7 @@ int main() {
 
     gf::Queue<gf::Packet> serverPackets;
 
-    stg::Color myColor = stg::Color::BLUE;
+    stg::Color myColor;
     PLAYING_STATE state = PLAYING_STATE::CONNEXION;
     bool myTurn = false;
 
@@ -69,7 +70,7 @@ int main() {
     gf::RectangleShape extendedBackground(extendedWorld);
     extendedBackground.setColor(gf::Color::Gray());
     // future bouton aide/règles
-    gf::Texture hud("src/client/resources/help.png");
+    gf::Texture hud("src/client/resources/play_button.png");
     gf::Sprite hud_s(hud);
     hud_s.setPosition({0, 0});
     //paramètrage des vues
@@ -133,7 +134,7 @@ int main() {
                     myColor = assign.color;
                     myTurn = assign.starting;
 
-                    std::cout << "You " << (myTurn ? "start " : "don't start ") << "and you are player " << myColor << std::endl;
+                    //std::cout << "You " << (myTurn ? "start " : "don't start ") << "and you are player " << myColor << std::endl;
                     break;
                 }
 
@@ -198,8 +199,13 @@ int main() {
     ++x;
     board.setPiece(x,y,stg::Piece(stg::PieceName::DRAPEAU,myColor));
 
+    /*
+     * TODO: détecter la fin du placement des pièces pour un joueur et attendre le second pour commencer la partie.
+     */
+
     //game
     gf::Vector2i selected = gf::Vector2i(-1,-1);
+    gf::Vector2i mouse_click = selected;
 
     while (window.isOpen()) {
         gf::Event event;
@@ -218,10 +224,12 @@ int main() {
                     break;
                 case gf::EventType::MouseButtonPressed:
                     if (event.mouseButton.button == gf::MouseButton::Left) {
+                        mouse_click = event.mouseButton.coords;
                         if(selected == gf::Vector2i(-1,-1)) {
-                            selected = board.convert_mouse_coord_to_case(event.mouseButton.coords.x, event.mouseButton.coords.y, window.getSize().x, window.getSize().y);
+                            selected = renderer.mapPixelToCoords(mouse_click, *currentView);
+                            selected = gf::Vector2i(selected.x/64, selected.y/64);
                         } else {
-                            board.movePiece(selected, board.convert_mouse_coord_to_case(event.mouseButton.coords.x, event.mouseButton.coords.y, window.getSize().x, window.getSize().y));
+                            board.movePiece(selected, gf::Vector2i(renderer.mapPixelToCoords(mouse_click, *currentView).x/64, renderer.mapPixelToCoords(mouse_click, *currentView).y/64));
                             selected = gf::Vector2i(-1,-1);
                         }
                     }
