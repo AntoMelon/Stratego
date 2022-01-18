@@ -241,9 +241,9 @@ int main() {
                                 std::cout << "packet ok" << std::endl;
                                 socket_client.sendPacket(packet_board); //envoie du packet
                                 std::cout << "envoyer!" << std::endl;
+                                state = IN_GAME;
                             }
                         }
-                        state = IN_GAME;
                     }
                     break;
                 default:
