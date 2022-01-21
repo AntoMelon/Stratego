@@ -155,6 +155,7 @@ int main() {
 
     while (window.isOpen()) {
         gf::Event event;
+        gf::Packet communication;
         while (window.pollEvent(event)) {
             switch (event.type) {
                 case gf::EventType::Closed:
@@ -170,24 +171,26 @@ int main() {
                     break;
                 case gf::EventType::MouseButtonPressed:
                     if (event.mouseButton.button == gf::MouseButton::Left) {
-                        mouse_click = event.mouseButton.coords;
-                        if(selected == gf::Vector2i(-1,-1)) {
-                            selected = renderer.mapPixelToCoords(mouse_click, *currentView);
-                            selected = gf::Vector2i(selected.x/64, selected.y/64);
+                        if ((event.mouseButton.coords.x < 128) && (event.mouseButton.coords.y < 26)) {
+                            stg::ClientBoardSubmit firstBoard;
+                            firstBoard.color = myColor;
+                            gf::Packet packet_board;
+                            packet_board.is(firstBoard);
+                            socket_client.sendPacket(packet_board);
+                            std::cout<<"Envoie du plateau"<<std::endl;
                         } else {
-                            board.movePiece(selected, gf::Vector2i(renderer.mapPixelToCoords(mouse_click, *currentView).x/64, renderer.mapPixelToCoords(mouse_click, *currentView).y/64));
-                            selected = gf::Vector2i(-1,-1);
-                        }
-                    }
-                    if (state == PLAYING_STATE::PLACEMENT) {
-                        if (event.mouseButton.button == gf::MouseButton::Left) {
-                            if ((event.mouseButton.coords.x < 128) && (event.mouseButton.coords.y < 26)) {
-                                stg::ClientBoardSubmit firstBoard;
-                                firstBoard.color = myColor;
-                                gf::Packet packet_board;
-                                packet_board.is(firstBoard);
-                                socket_client.sendPacket(packet_board);
-                                state = PLAYING_STATE::IN_GAME;
+                            mouse_click = event.mouseButton.coords;
+                            if (selected == gf::Vector2i(-1, -1)) {
+                                selected = renderer.mapPixelToCoords(mouse_click, *currentView);
+                                selected = gf::Vector2i(selected.x / 64, selected.y / 64);
+                                if ((selected.x < 0) || (selected.x > 9) || (selected.y < 0) || (selected.x < 0)) {
+                                    selected = gf::Vector2i(-1, -1);
+                                }
+                            } else {
+                                board.movePiece(selected, gf::Vector2i(
+                                        renderer.mapPixelToCoords(mouse_click, *currentView).x / 64,
+                                        renderer.mapPixelToCoords(mouse_click, *currentView).y / 64));
+                                selected = gf::Vector2i(-1, -1);
                             }
                         }
                     }
@@ -196,6 +199,30 @@ int main() {
                     break;
             }
             views.processEvent(event);
+        }
+
+        if (serverPackets.poll(communication)) {
+            switch(communication.getType()) {
+                case stg::ServerMessage::type:
+                {
+                    stg::ServerMessage com = communication.as<stg::ServerMessage>();
+                    switch(com.code) {
+                        case stg::ResponseCode::BOARD_OK:
+                            std::cout << com.message << std::endl;
+                            state = PLAYING_STATE::IN_GAME;
+                            break;
+                        case stg::ResponseCode::BOARD_ERR:
+                            std::cout << com.message << std::endl;
+                            state = PLAYING_STATE::PLACEMENT;
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                }
+                default:
+                    break;
+            }
         }
 
         if (state == PLAYING_STATE::PLACEMENT || state == PLAYING_STATE::IN_GAME) {
