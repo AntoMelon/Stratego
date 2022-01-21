@@ -174,6 +174,7 @@ int main() {
                         if ((event.mouseButton.coords.x < 128) && (event.mouseButton.coords.y < 26)) {
                             stg::ClientBoardSubmit firstBoard;
                             firstBoard.color = myColor;
+                            firstBoard.board = board.getAllPiece();
                             gf::Packet packet_board;
                             packet_board.is(firstBoard);
                             socket_client.sendPacket(packet_board);

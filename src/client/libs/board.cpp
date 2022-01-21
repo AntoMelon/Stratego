@@ -90,6 +90,24 @@ namespace stg {
         return board[x][y].second;
     }
 
+    std::vector<stg::Piece> Board::getAllPiece() {
+
+        std::vector<stg::Piece> to_send;
+
+        for (int y = 0; y < 10; ++y) {
+
+            for (int x = 0; x < 10; ++x) {
+
+                to_send.push_back(board[x][y].second);
+
+            }
+
+        }
+
+        return to_send;
+
+    }
+
     void Board::setPieceFromColor(stg::Color _color) {
 
         int x = 0, y = 0;

@@ -41,6 +41,8 @@ namespace stg {
         // Get the piece at the given coordinates
         Piece getPiece(int x, int y);
 
+        std::vector<stg::Piece> getAllPiece();
+
         // Set the piece at the given coordinates
         void setPiece(int x, int y, Piece piece);
 
