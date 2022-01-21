@@ -21,13 +21,10 @@
 #define OFFSET_X 0
 #define OFFSET_Y 150
 
-enum PLAYING_STATE {
-    CONNEXION,
-    PLACEMENT,
-    IN_GAME,
-    END
-};
+//etape du jeu
+enum PLAYING_STATE {CONNEXION, PLACEMENT, IN_GAME, END};
 
+//thread de gestion des packets
 auto threadPackets = [] (gf::TcpSocket &socket,gf::Queue<gf::Packet> &queue) {
     gf::Packet packet;
     for(;;) {
@@ -44,14 +41,63 @@ int main() {
 
     gf::Queue<gf::Packet> serverPackets;
 
+    //paramètres définissant le joueur
     stg::Color myColor;
     PLAYING_STATE state = PLAYING_STATE::CONNEXION;
     bool myTurn = false;
 
-    static constexpr gf::Vector2i ScreenSize(860, 640);
+    //parametre de socket
+    gf::TcpSocket socket_client = gf::TcpSocket("localhost", "42690");
+    std::thread packetsThread(threadPackets,std::ref(socket_client),std::ref(serverPackets));
+    packetsThread.detach();
+    stg::ClientHello data;
+    data.name = "client";
+    gf::Packet data2;
+    data2.is(data);
+    socket_client.sendPacket(data2);
 
+    //Plateau de jeu
+    stg::Board board;
+
+    //boucle de connexion
+    while (state == PLAYING_STATE::CONNEXION) {
+        gf::Packet response;
+        if (serverPackets.poll(response)) {
+            switch(response.getType()) {
+                case stg::ServerMessage::type:
+                {
+                    stg::ServerMessage msg = response.as<stg::ServerMessage>();
+                    switch(msg.code) {
+                        case stg::ResponseCode::WAITING:
+                            std::cout << msg.message << std::endl;
+                            break;
+                        case stg::ResponseCode::STARTING:
+                            std::cout << msg.message << std::endl;
+                            state = PLAYING_STATE::PLACEMENT;
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                }
+                case stg::ServerAssignColor::type: {
+                    stg::ServerAssignColor assign = response.as<stg::ServerAssignColor>();
+                    myColor = assign.color;
+                    myTurn = assign.starting;
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+    }
+
+    //paramètre de la fenetre
+    static constexpr gf::Vector2i ScreenSize(860, 640);
     gf::Window window("Stratego online", ScreenSize);
     gf::RenderWindow renderer(window);
+
+    //monde de jeu
     gf::RectF world = gf::RectF::fromPositionSize({ 0, 0 }, {640, 640}); //monde du jeu
     gf::RectF extendedWorld = world.grow(100);
 
@@ -69,135 +115,39 @@ int main() {
     background.setColor(gf::Color::White);
     gf::RectangleShape extendedBackground(extendedWorld);
     extendedBackground.setColor(gf::Color::Gray());
-    // future bouton aide/règles
-    gf::Texture hud("src/client/resources/play_button.png");
-    gf::Sprite hud_s(hud);
-    hud_s.setPosition({0, 0});
+    // hud
+    gf::Texture T_starting_button("src/client/resources/play_button.png");
+    gf::Sprite S_starting_button(T_starting_button);
+    S_starting_button.setPosition({0, 0});
+    gf::Texture T_Uplay;
+    if( myColor == stg::Color::BLUE) {
+        T_Uplay = gf::Texture("src/client/resources/uplay_blue.png");
+    } else {
+        T_Uplay = gf::Texture("src/client/resources/uplay_red.png");
+    }
+    gf::Sprite S_Uplay(T_Uplay);
+    S_Uplay.setPosition({0, 100});
     //paramètrage des vues
     gf::RectangleShape frame(maxiViewport.getSize() * ScreenSize);
     frame.setPosition(maxiViewport.getPosition() * ScreenSize);
     frame.setColor(gf::Color::Transparent);
-    renderer.clear(gf::Color::Black);
-
-    stg::Board board;
-    //gf::Texture cadre_selection(gf::Path("./resources/selected_indicator.png"));
-
-    gf::TcpSocket socket_client = gf::TcpSocket("localhost", "42690"); //parametre de connxeion
-
-    std::thread packetsThread(threadPackets,std::ref(socket_client),std::ref(serverPackets));
-    packetsThread.detach(); // indépendance thread/execution
-
-    stg::ClientHello data; //ressources à envoyer
-    data.name = "client"; //parametre du nom
-
-    gf::Packet data2; //créer packet
-    data2.is(data); // serialiser packet
-
-    socket_client.sendPacket(data2); //envoie du packet
-
+    //cadre de selection
+    gf::Texture cadre_selection(gf::Path("src/client/resources/selected_indicator.png"));
     //zone de placement des pions
     gf::RectangleShape zone_to_place;
     zone_to_place.setSize({636, 252});
     zone_to_place.setColor(gf::Color::Transparent);
     zone_to_place.setOutlineThickness(2);
 
-    while (state == PLAYING_STATE::CONNEXION) { //en attente du début de partie
-
-        gf::Packet response; //packet reponse
-
-        if (serverPackets.poll(response)) { //si packet reçu
-            switch(response.getType()) { //e fonction du type
-                case stg::ServerMessage::type: //message
-                {
-                    stg::ServerMessage msg = response.as<stg::ServerMessage>(); //deserialiser
-
-                    switch(msg.code) { //code reçu
-                        case stg::ResponseCode::WAITING: //en attente
-                            std::cout << msg.message << std::endl; //afficher en attente
-                            break;
-
-                        case stg::ResponseCode::STARTING: //commencer
-                            std::cout << msg.message << std::endl; //afficher debut
-                            state = PLAYING_STATE::PLACEMENT; //jeu commencer
-                            break;
-
-                        default:
-                            break;
-                    }
-
-                    break;
-                }
-
-                case stg::ServerAssignColor::type:
-                {
-                    stg::ServerAssignColor assign = response.as<stg::ServerAssignColor>();
-                    myColor = assign.color;
-                    myTurn = assign.starting;
-
-                    //std::cout << "You " << (myTurn ? "start " : "don't start ") << "and you are player " << myColor << std::endl;
-                    break;
-                }
-
-                default:
-                    break;
-            }
-        }
-    }
-
-    //set fore placement
-    int x = 0, y = 0;
+    //ajouter les pieces au plateau
     if (myColor == stg::Color::RED) {
         zone_to_place.setOutlineColor(gf::Color::Red);
         zone_to_place.setPosition({2, 384});
     } else {
         zone_to_place.setOutlineColor(gf::Color::Blue);
         zone_to_place.setPosition({2, 2});
-        y = 6;
     }
-    while (x < 8) {
-        board.setPiece(x,y,stg::Piece(stg::PieceName::ECLAIREUR,myColor));
-        ++x;
-    }
-    while (x < 10) {
-        board.setPiece(x,y,stg::Piece(stg::PieceName::COLONEL,myColor));
-        ++x;
-    }
-    x = 0;
-    ++y;
-    while (x < 6) {
-        board.setPiece(x,y,stg::Piece(stg::PieceName::BOMBE,myColor));
-        ++x;
-    }
-    while (x < 10) {
-        board.setPiece(x,y,stg::Piece(stg::PieceName::SERGENT,myColor));
-        ++x;
-    }
-    x = 0;
-    ++y;
-    while (x < 5) {
-        board.setPiece(x,y,stg::Piece(stg::PieceName::DEMINEUR,myColor));
-        ++x;
-    }
-    while (x < 9) {
-        board.setPiece(x,y,stg::Piece(stg::PieceName::LIEUTENANT,myColor));
-        ++x;
-    }
-    board.setPiece(x,y,stg::Piece(stg::PieceName::MARECHAL,myColor));
-    x = 0;
-    ++y;
-    while (x < 4) {
-        board.setPiece(x,y,stg::Piece(stg::PieceName::CAPITAINE,myColor));
-        ++x;
-    }
-    while (x < 7) {
-        board.setPiece(x,y,stg::Piece(stg::PieceName::COMMANDANT,myColor));
-        ++x;
-    }
-    board.setPiece(x,y,stg::Piece(stg::PieceName::GENERAL,myColor));
-    ++x;
-    board.setPiece(x,y,stg::Piece(stg::PieceName::ESPION,myColor));
-    ++x;
-    board.setPiece(x,y,stg::Piece(stg::PieceName::DRAPEAU,myColor));
+    board.setPieceFromColor(myColor);
 
     //game
     gf::Vector2i selected = gf::Vector2i(-1,-1);
@@ -232,16 +182,12 @@ int main() {
                     if (state == PLAYING_STATE::PLACEMENT) {
                         if (event.mouseButton.button == gf::MouseButton::Left) {
                             if ((event.mouseButton.coords.x < 128) && (event.mouseButton.coords.y < 26)) {
-                                std::cout << "click" << std::endl;
-                                stg::ClientBoardSubmit firstBoard; //ressources à envoyer
-                                firstBoard.color = myColor; //parametre du nom
-                                std::cout << "ressource ok" << std::endl;
-                                gf::Packet packet_board; //créer packet
-                                packet_board.is(firstBoard); // serialiser packet
-                                std::cout << "packet ok" << std::endl;
-                                socket_client.sendPacket(packet_board); //envoie du packet
-                                std::cout << "envoyer!" << std::endl;
-                                state = IN_GAME;
+                                stg::ClientBoardSubmit firstBoard;
+                                firstBoard.color = myColor;
+                                gf::Packet packet_board;
+                                packet_board.is(firstBoard);
+                                socket_client.sendPacket(packet_board);
+                                state = PLAYING_STATE::IN_GAME;
                             }
                         }
                     }
@@ -249,7 +195,6 @@ int main() {
                 default:
                     break;
             }
-
             views.processEvent(event);
         }
 
@@ -257,7 +202,7 @@ int main() {
 
             renderer.clear();
 
-            //gestion des vues
+            //afficher dans monde
             currentView->setViewport(maxiViewport);
             renderer.setView(*currentView);
             renderer.draw(extendedBackground);
@@ -274,18 +219,10 @@ int main() {
             renderer.setView(screenView);
             renderer.draw(frame);
             if (state == PLAYING_STATE::PLACEMENT) {
-                renderer.draw(hud_s);
+                renderer.draw(S_starting_button);
             }
-
-            /*if(selected != gf::Vector2i(-1,-1)) {
-                gf::Sprite sprite;
-                sprite.setTexture(cadre_selection);
-                sprite.setPosition(gf::Vector2i(selected.x*64,selected.y*64));
-                renderer.draw(sprite);
-            }*/
-
+            renderer.draw(S_Uplay);
             renderer.display();
-
         }
 
     }

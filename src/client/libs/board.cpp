@@ -90,6 +90,59 @@ namespace stg {
         return board[x][y].second;
     }
 
+    void Board::setPieceFromColor(stg::Color _color) {
+
+        int x = 0, y = 0;
+        if (_color == stg::Color::BLUE){
+            y = 6;
+        }
+        while (x < 8) {
+            setPiece(x,y,stg::Piece(stg::PieceName::ECLAIREUR,_color));
+            ++x;
+        }
+        while (x < 10) {
+            setPiece(x,y,stg::Piece(stg::PieceName::COLONEL,_color));
+            ++x;
+        }
+        x = 0;
+        ++y;
+        while (x < 6) {
+            setPiece(x,y,stg::Piece(stg::PieceName::BOMBE,_color));
+            ++x;
+        }
+        while (x < 10) {
+            setPiece(x,y,stg::Piece(stg::PieceName::SERGENT,_color));
+            ++x;
+        }
+        x = 0;
+        ++y;
+        while (x < 5) {
+            setPiece(x,y,stg::Piece(stg::PieceName::DEMINEUR,_color));
+            ++x;
+        }
+        while (x < 9) {
+            setPiece(x,y,stg::Piece(stg::PieceName::LIEUTENANT,_color));
+            ++x;
+        }
+        setPiece(x,y,stg::Piece(stg::PieceName::MARECHAL,_color));
+        x = 0;
+        ++y;
+        while (x < 4) {
+            setPiece(x,y,stg::Piece(stg::PieceName::CAPITAINE,_color));
+            ++x;
+        }
+        while (x < 7) {
+            setPiece(x,y,stg::Piece(stg::PieceName::COMMANDANT,_color));
+            ++x;
+        }
+        setPiece(x,y,stg::Piece(stg::PieceName::GENERAL,_color));
+        ++x;
+        setPiece(x,y,stg::Piece(stg::PieceName::ESPION,_color));
+        ++x;
+        setPiece(x,y,stg::Piece(stg::PieceName::DRAPEAU,_color));
+
+    }
+
     void Board::render(gf::RenderWindow &renderer, gf::AdaptativeView *view) {
         renderer.setView(*view);
         for(int i = 0; i < 10; i++) {

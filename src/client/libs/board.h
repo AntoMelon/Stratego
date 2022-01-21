@@ -44,6 +44,9 @@ namespace stg {
         // Set the piece at the given coordinates
         void setPiece(int x, int y, Piece piece);
 
+        //Set the piece at the initial coordinates from a given color
+        void setPieceFromColor(stg::Color _color);
+
         //Render the board
         void render(gf::RenderWindow &renderer, gf::AdaptativeView* view);
         std::pair<std::string, bool> movePiece(gf::Vector2i from, gf::Vector2i to);
