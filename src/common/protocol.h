@@ -98,6 +98,9 @@ namespace stg {
 
         bool atk_alive;
         bool def_alive;
+
+        bool win;
+        bool lose;
     };
 
     template<typename Archive>

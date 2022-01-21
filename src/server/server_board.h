@@ -16,6 +16,8 @@ namespace stg {
         bool isMoveAllowed(int from_x,int from_y, int to_x, int to_y) const;
         bool movePiece(int from_x, int from_y, int to_x, int to_y);
 
+        bool stillHasFlag(stg::Color color) const;
+
 
         stg::Piece getPiece(int x, int y) const;
         void setPiece(int x, int y, const stg::Piece& piece);

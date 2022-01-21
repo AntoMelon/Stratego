@@ -58,7 +58,7 @@ bool isSubmittedBoardOk(std::vector<stg::Piece> &board) {
  * @param gf::Packet &packet : packet sent
  * @param stg::ServerBoard &board : board of the game
  */
-void dealWithRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet &packet, stg::ServerBoard &board) {
+void dealWithRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet &packet, stg::ServerBoard &board, stg::Color sender_color) {
 
     gf::Packet to_send;
 
@@ -84,6 +84,8 @@ void dealWithRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet &pa
             result.from_y = request.from_y;
             result.to_x = request.to_x;
             result.to_y = request.to_y;
+            result.win = false;
+            result.lose = false;
 
             stg::Piece piece_atk = board.getPiece(result.from_x,result.from_y);
             stg::Piece piece_def = board.getPiece(result.to_x,result.to_y);
@@ -118,9 +120,29 @@ void dealWithRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet &pa
 
             board.movePiece(result.from_x,result.from_y,result.to_x,result.to_y);
 
-            to_send.is(result);
+            bool stillRedFlag = board.stillHasFlag(stg::Color::RED);
+            bool stillBlueFlag = board.stillHasFlag(stg::Color::BLUE);
 
+            if (sender_color == stg::Color::RED) {
+                result.win = !stillBlueFlag;
+                result.lose = !stillRedFlag;
+            } else {
+                result.win = !stillRedFlag;
+                result.lose = !stillBlueFlag;
+            }
+
+            to_send.is(result);
             sender.sendPacket(to_send);
+
+            if (sender_color == stg::Color::RED) {
+                result.win = !stillRedFlag;
+                result.lose = !stillBlueFlag;
+            } else {
+                result.win = !stillBlueFlag;
+                result.lose = !stillRedFlag;
+            }
+
+            to_send.is(result);
             other.sendPacket(to_send);
             break;
         }
@@ -248,12 +270,12 @@ int main() {
     while (inGame) {
         player1.recvPacket(packet);
         if (turn == 0) {
-            dealWithRequest(player1,player2,packet,board);
+            dealWithRequest(player1,player2,packet,board, p1Color == 0 ? stg::Color::RED : stg::Color::BLUE);
         }
 
         player2.recvPacket(packet);
         if (turn == 1) {
-            dealWithRequest(player2,player1,packet,board);
+            dealWithRequest(player2,player1,packet,board, p1Color == 0 ? stg::Color::BLUE : stg::Color::RED);
         }
     }
 

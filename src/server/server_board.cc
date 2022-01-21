@@ -81,6 +81,15 @@ namespace stg {
         return true;
     }
 
+    bool ServerBoard::stillHasFlag(stg::Color color) const {
+        for (auto piece : board) {
+            if (piece.getPieceName() == stg::PieceName::DRAPEAU && piece.getColor() == color) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     stg::Piece ServerBoard::getPiece(int x, int y) const {
         return board[x*10+y];
     }
