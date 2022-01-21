@@ -125,8 +125,16 @@ void dealWithRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet &pa
             break;
         }
 
-        case stg::ClientBoardSubmit::type:
-        {
+        default:
+        break;
+    }
+}
+
+bool dealWithRequestIfInitialBoard(gf::TcpSocket& sender, gf::Packet& packet, stg::ServerBoard& board) {
+    gf::Packet to_send;
+    bool validBoard = false;
+
+    if (packet.getType() == stg::ClientBoardSubmit::type) {
             stg::ClientBoardSubmit submit = packet.as<stg::ClientBoardSubmit>();
 
             bool boardOk = isSubmittedBoardOk(submit.board);
@@ -137,6 +145,7 @@ void dealWithRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet &pa
                 response.code = stg::ResponseCode::BOARD_OK;
                 response.message = "Board is valid.";
                 board.importSubmittedBoard(submit.color,submit.board);
+                validBoard = true;
             } else {
                 response.code = stg::ResponseCode::BOARD_ERR;
                 response.message = "Board is invalid.";
@@ -144,13 +153,9 @@ void dealWithRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet &pa
 
             to_send.is(response);
             sender.sendPacket(to_send);
-
-            break;
-        }
-
-        default:
-        break;
     }
+
+    return validBoard;
 }
 
 int main() {
@@ -228,6 +233,17 @@ int main() {
 
     
     stg::ServerBoard board;
+    bool board1Received = false;
+    bool board2Received = false;
+
+    while (!board1Received || !board2Received) {
+        player1.recvPacket(packet);
+        board1Received = dealWithRequestIfInitialBoard(player1,packet,board);
+
+        player2.recvPacket(packet);
+        board2Received = dealWithRequestIfInitialBoard(player2,packet,board);
+    
+    }
 
     while (inGame) {
         player1.recvPacket(packet);

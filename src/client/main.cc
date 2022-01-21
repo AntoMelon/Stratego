@@ -233,11 +233,11 @@ int main() {
                         if (event.mouseButton.button == gf::MouseButton::Left) {
                             if ((event.mouseButton.coords.x < 128) && (event.mouseButton.coords.y < 26)) {
                                 std::cout << "click" << std::endl;
-                                stg::ClientBoardSubmit firstBorad; //ressources à envoyer
-                                firstBorad.color = myColor; //parametre du nom
+                                stg::ClientBoardSubmit firstBoard; //ressources à envoyer
+                                firstBoard.color = myColor; //parametre du nom
                                 std::cout << "ressource ok" << std::endl;
                                 gf::Packet packet_board; //créer packet
-                                packet_board.is(firstBorad); // serialiser packet
+                                packet_board.is(firstBoard); // serialiser packet
                                 std::cout << "packet ok" << std::endl;
                                 socket_client.sendPacket(packet_board); //envoie du packet
                                 std::cout << "envoyer!" << std::endl;
