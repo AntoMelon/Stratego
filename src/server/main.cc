@@ -61,6 +61,7 @@ bool isSubmittedBoardOk(std::vector<stg::Piece> &board) {
 void dealWithRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet &packet, stg::ServerBoard &board, stg::Color sender_color) {
 
     gf::Packet to_send;
+    std::cout<<"Reçu"<< std::endl;
 
     switch (packet.getType()) {
 
@@ -259,6 +260,7 @@ int main() {
     bool board2Received = false;
 
     while (!board1Received || !board2Received) {
+
         player1.recvPacket(packet);
         board1Received = dealWithRequestIfInitialBoard(player1,packet,board);
 

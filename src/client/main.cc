@@ -36,6 +36,27 @@ auto threadPackets = [] (gf::TcpSocket &socket,gf::Queue<gf::Packet> &queue) {
     }
 };
 
+void sendFirstBoard(std::vector<stg::Piece> _board, stg::Color _color, gf::TcpSocket &_socket) {
+    stg::ClientBoardSubmit firstBoard;
+    firstBoard.color = _color;
+    firstBoard.board = _board;
+    gf::Packet packet_board;
+    packet_board.is(firstBoard);
+    _socket.sendPacket(packet_board);
+}
+
+void sendMove(gf::Vector2i _from, gf::Vector2i _to, gf::TcpSocket &_socket) {
+    stg::ClientMoveRequest move;
+    move.from_x = _from.x;
+    move.from_y = _from.y;
+    move.to_x = _to.x;
+    move.to_y = _to.y;
+    gf::Packet packet_move;
+    packet_move.is(move);
+    _socket.sendPacket(packet_move);
+}
+
+
 
 int main() {
 
@@ -172,13 +193,7 @@ int main() {
                 case gf::EventType::MouseButtonPressed:
                     if (event.mouseButton.button == gf::MouseButton::Left) {
                         if ((event.mouseButton.coords.x < 128) && (event.mouseButton.coords.y < 26)) {
-                            stg::ClientBoardSubmit firstBoard;
-                            firstBoard.color = myColor;
-                            firstBoard.board = board.getAllPiece();
-                            gf::Packet packet_board;
-                            packet_board.is(firstBoard);
-                            socket_client.sendPacket(packet_board);
-                            std::cout<<"Envoie du plateau"<<std::endl;
+                            sendFirstBoard(board.getAllPiece(), myColor, socket_client);
                         } else {
                             mouse_click = event.mouseButton.coords;
                             if (selected == gf::Vector2i(-1, -1)) {
