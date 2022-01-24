@@ -91,7 +91,7 @@ namespace stg {
         int from_x;
         int from_y;
         int to_x;
-        int to_y;board
+        int to_y;
 
         int str_atk;
         int str_def;

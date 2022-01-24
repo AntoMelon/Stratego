@@ -179,10 +179,10 @@ int main() {
         gf::Packet communication;
         while (window.pollEvent(event)) {
             switch (event.type) {
-                case gf::EventType::Closed:
+                case gf::EventType::Closed: //fermeture de fenêtre
                     window.close();
                     break;
-                case gf::EventType::Resized:
+                case gf::EventType::Resized: //redimmension de la fenêtre
                     if (window.getSize().x < 860) {
                         window.setSize(gf::Vector2i(840, window.getSize().y));
                     }
@@ -190,24 +190,45 @@ int main() {
                         window.setSize(gf::Vector2i(window.getSize().x, 640));
                     }
                     break;
-                case gf::EventType::MouseButtonPressed:
+                case gf::EventType::MouseButtonPressed: //bouton de souris
                     if (event.mouseButton.button == gf::MouseButton::Left) {
-                        if ((event.mouseButton.coords.x < 128) && (event.mouseButton.coords.y < 26)) {
-                            sendFirstBoard(board.getAllPiece(), myColor, socket_client);
-                        } else {
-                            mouse_click = event.mouseButton.coords;
-                            if (selected == gf::Vector2i(-1, -1)) {
-                                selected = renderer.mapPixelToCoords(mouse_click, *currentView);
-                                selected = gf::Vector2i(selected.x / 64, selected.y / 64);
-                                if ((selected.x < 0) || (selected.x > 9) || (selected.y < 0) || (selected.x < 0)) {
+                        switch (state) {
+                            case PLAYING_STATE::CONNEXION: //étape de connexion
+                                break;
+                            case PLAYING_STATE::PLACEMENT: //étape de placement
+                                if ((event.mouseButton.coords.x < 128) && (event.mouseButton.coords.y < 26)) {
+                                    sendFirstBoard(board.getAllPiece(), myColor, socket_client);
+                                } else {
+                                    mouse_click = event.mouseButton.coords;
+                                    if (selected == gf::Vector2i(-1, -1)) {
+                                        selected = renderer.mapPixelToCoords(mouse_click, *currentView);
+                                        selected = gf::Vector2i(selected.x / 64, selected.y / 64);
+                                        if ((selected.x < 0) || (selected.x > 9) || (selected.y < 0) || (selected.x > 9)) {
+                                            selected = gf::Vector2i(-1, -1);
+                                        }
+                                    } else {
+                                        board.movePiece(selected, gf::Vector2i(renderer.mapPixelToCoords(mouse_click, *currentView).x / 64, renderer.mapPixelToCoords(mouse_click, *currentView).y / 64));
+                                        selected = gf::Vector2i(-1, -1);
+                                    }
+                                }
+                                break;
+                            case PLAYING_STATE::IN_GAME: //étape en jeu
+                                mouse_click = event.mouseButton.coords;
+                                if (selected == gf::Vector2i(-1, -1)) {
+                                    selected = renderer.mapPixelToCoords(mouse_click, *currentView);
+                                    selected = gf::Vector2i(selected.x / 64, selected.y / 64);
+                                    if ((selected.x < 0) || (selected.x > 9) || (selected.y < 0) || (selected.x > 9)) {
+                                        selected = gf::Vector2i(-1, -1);
+                                    }
+                                } else {
+                                    sendMove(selected, gf::Vector2i(renderer.mapPixelToCoords(mouse_click, *currentView).x / 64, renderer.mapPixelToCoords(mouse_click, *currentView).y / 64), socket_client);
                                     selected = gf::Vector2i(-1, -1);
                                 }
-                            } else {
-                                board.movePiece(selected, gf::Vector2i(
-                                        renderer.mapPixelToCoords(mouse_click, *currentView).x / 64,
-                                        renderer.mapPixelToCoords(mouse_click, *currentView).y / 64));
-                                selected = gf::Vector2i(-1, -1);
-                            }
+                                break;
+                            case PLAYING_STATE::END: //étape de partie finie
+                                break;
+                            default:
+                                break;
                         }
                     }
                     break;
@@ -216,32 +237,46 @@ int main() {
             }
             views.processEvent(event);
         }
-
-        if (serverPackets.poll(communication)) {
+        if (serverPackets.poll(communication)) { //reception de packets
             switch(communication.getType()) {
                 case stg::ServerMessage::type:
                 {
                     stg::ServerMessage com = communication.as<stg::ServerMessage>();
-                    switch(com.code) {
-                        case stg::ResponseCode::BOARD_OK:
+                    switch (com.code) {
+                        case stg::ResponseCode::BOARD_OK: //plateau bon
                             std::cout << com.message << std::endl;
                             state = PLAYING_STATE::IN_GAME;
                             break;
-                        case stg::ResponseCode::BOARD_ERR:
+                        case stg::ResponseCode::BOARD_ERR: //erreur dans le plateau
                             std::cout << com.message << std::endl;
                             state = PLAYING_STATE::PLACEMENT;
                             break;
+                        case stg::ResponseCode::MOVE_ERR: //problème dans le mouvement
+                            std::cout << com.message << std::endl;
+                            break;
+                        case stg::ResponseCode::STARTING:
+                        case stg::ResponseCode::WAITING:
                         default:
+                            std::cout << "Information reçue non-reconnue ou non-permise en jeu." << std::endl;
                             break;
                     }
                     break;
                 }
+                case stg::ServerMoveNotif::type: //mouvement effectué par un joueur
+                {
+                    stg::ServerMoveNotif com = communication.as<stg::ServerMoveNotif>();
+                    board.movePiece(gf::Vector2i({com.from_x, com.from_y}), gf::Vector2i({com.to_x, com.to_y}));
+                    myTurn = !myTurn;
+                    break;
+                }
+                case stg::ServerAssignColor::type: // événements non pris en compte durant ce stade de jeu
                 default:
+                    std::cout << "Information reçue non-reconnue ou non-permise en jeu." << std::endl;
                     break;
             }
         }
 
-        if (state == PLAYING_STATE::PLACEMENT || state == PLAYING_STATE::IN_GAME) {
+        if (state == PLAYING_STATE::PLACEMENT || state == PLAYING_STATE::IN_GAME) { // rendu graphique
 
             renderer.clear();
 
