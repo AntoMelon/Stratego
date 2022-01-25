@@ -15,6 +15,8 @@ find_package(gf REQUIRED)
 
 find_package(Threads)
 
+file(COPY src/client/resources DESTINATION .)
+
 add_executable(stgclient
   src/client/main.cc
         src/common/protocol.cpp src/common/protocol.h
