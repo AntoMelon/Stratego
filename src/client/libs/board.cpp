@@ -32,7 +32,7 @@ namespace stg {
             this->board.push_back(row);
         }
 
-        manager.addSearchDir(gf::Path("src/client/resources"));
+        manager.addSearchDir("resources");
 
         tileTextures.insert(std::pair("land", "field.png"));
         tileTextures.insert(std::pair("land_top_side", "field_top.png"));

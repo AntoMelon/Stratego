@@ -137,14 +137,14 @@ int main() {
     gf::RectangleShape extendedBackground(extendedWorld);
     extendedBackground.setColor(gf::Color::Gray());
     // hud
-    gf::Texture T_starting_button("src/client/resources/play_button.png");
+    gf::Texture T_starting_button("resources/play_button.png");
     gf::Sprite S_starting_button(T_starting_button);
     S_starting_button.setPosition({0, 0});
     gf::Texture T_Uplay;
     if( myColor == stg::Color::BLUE) {
-        T_Uplay = gf::Texture("src/client/resources/uplay_blue.png");
+        T_Uplay = gf::Texture("resources/uplay_blue.png");
     } else {
-        T_Uplay = gf::Texture("src/client/resources/uplay_red.png");
+        T_Uplay = gf::Texture("resources/uplay_red.png");
     }
     gf::Sprite S_Uplay(T_Uplay);
     S_Uplay.setPosition({0, 100});
@@ -153,7 +153,7 @@ int main() {
     frame.setPosition(maxiViewport.getPosition() * ScreenSize);
     frame.setColor(gf::Color::Transparent);
     //cadre de selection
-    gf::Texture cadre_selection(gf::Path("src/client/resources/selected_indicator.png"));
+    gf::Texture cadre_selection(gf::Path("resources/selected_indicator.png"));
     //zone de placement des pions
     gf::RectangleShape zone_to_place;
     zone_to_place.setSize({636, 252});
