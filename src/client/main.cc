@@ -36,6 +36,14 @@ auto threadPackets = [] (gf::TcpSocket &socket,gf::Queue<gf::Packet> &queue) {
     }
 };
 
+void sendFirstMessage(gf::TcpSocket &_socket) {
+    stg::ClientHello data;
+    data.name = "client";
+    gf::Packet data2;
+    data2.is(data);
+    _socket.sendPacket(data2);
+}
+
 void sendFirstBoard(std::vector<stg::Piece> _board, stg::Color _color, gf::TcpSocket &_socket) {
     stg::ClientBoardSubmit firstBoard;
     firstBoard.color = _color;
@@ -43,6 +51,7 @@ void sendFirstBoard(std::vector<stg::Piece> _board, stg::Color _color, gf::TcpSo
     gf::Packet packet_board;
     packet_board.is(firstBoard);
     _socket.sendPacket(packet_board);
+    std::cout << "Should send board" << std::endl;
 }
 
 void sendMove(gf::Vector2i _from, gf::Vector2i _to, gf::TcpSocket &_socket) {
@@ -57,67 +66,27 @@ void sendMove(gf::Vector2i _from, gf::Vector2i _to, gf::TcpSocket &_socket) {
 }
 
 
-
 int main() {
 
+    //packet arrivant
     gf::Queue<gf::Packet> serverPackets;
-
-    //paramètres définissant le joueur
-    stg::Color myColor;
-    PLAYING_STATE state = PLAYING_STATE::CONNEXION;
-    bool myTurn = false;
-
-    //parametre de socket
     gf::TcpSocket socket_client = gf::TcpSocket(HOST, PORT);
-
     if (!socket_client) {
         std::cerr << "Connection to server couldn't be established" << std::endl;
         return 1;
     }
 
+    //paramètres définissant le joueur
+    bool myTurn = false;
+    stg::Color myColor;
+    stg::Board board;
+    PLAYING_STATE state = PLAYING_STATE::CONNEXION;
+
+    //lancer thread de gestion des packets
     std::thread packetsThread(threadPackets,std::ref(socket_client),std::ref(serverPackets));
     packetsThread.detach();
-    stg::ClientHello data;
-    data.name = "client";
-    gf::Packet data2;
-    data2.is(data);
-    socket_client.sendPacket(data2);
 
-    //Plateau de jeu
-    stg::Board board;
-
-    //boucle de connexion
-    while (state == PLAYING_STATE::CONNEXION) {
-        gf::Packet response;
-        if (serverPackets.poll(response)) {
-            switch(response.getType()) {
-                case stg::ServerMessage::type:
-                {
-                    stg::ServerMessage msg = response.as<stg::ServerMessage>();
-                    switch(msg.code) {
-                        case stg::ResponseCode::WAITING:
-                            std::cout << msg.message << std::endl;
-                            break;
-                        case stg::ResponseCode::STARTING:
-                            std::cout << msg.message << std::endl;
-                            state = PLAYING_STATE::PLACEMENT;
-                            break;
-                        default:
-                            break;
-                    }
-                    break;
-                }
-                case stg::ServerAssignColor::type: {
-                    stg::ServerAssignColor assign = response.as<stg::ServerAssignColor>();
-                    myColor = assign.color;
-                    myTurn = assign.starting;
-                    break;
-                }
-                default:
-                    break;
-            }
-        }
-    }
+    sendFirstMessage(socket_client);
 
     //paramètre de la fenetre
     static constexpr gf::Vector2i ScreenSize(860, 640);
@@ -147,11 +116,6 @@ int main() {
     gf::Sprite S_starting_button(T_starting_button);
     S_starting_button.setPosition({0, 0});
     gf::Texture T_Uplay;
-    if( myColor == stg::Color::BLUE) {
-        T_Uplay = gf::Texture("resources/uplay_blue.png");
-    } else {
-        T_Uplay = gf::Texture("resources/uplay_red.png");
-    }
     gf::Sprite S_Uplay(T_Uplay);
     S_Uplay.setPosition({0, 100});
     //paramètrage des vues
@@ -167,59 +131,45 @@ int main() {
     zone_to_place.setOutlineThickness(2);
 
     //ajouter les pieces au plateau
-    if (myColor == stg::Color::RED) {
-        zone_to_place.setOutlineColor(gf::Color::Red);
-    } else {
-        zone_to_place.setOutlineColor(gf::Color::Blue);
-    }
     zone_to_place.setPosition({2, 2});
-    board.setPieceFromColor(myColor);
 
     //game
+    gf::Event event;
+    gf::Packet communication;
     gf::Vector2i selected = gf::Vector2i(-1,-1);
     gf::Vector2i mouse_click = selected;
 
     while (window.isOpen()) {
-        gf::Event event;
-        gf::Packet communication;
+
+        //décharger la file d'événement
         while (window.pollEvent(event)) {
             switch (event.type) {
                 case gf::EventType::Closed: //fermeture de fenêtre
                     window.close();
                     break;
-                case gf::EventType::Resized: //redimmension de la fenêtre
-                    if (window.getSize().x < 860) {
-                        window.setSize(gf::Vector2i(840, window.getSize().y));
-                    }
-                    if (window.getSize().y < 640) {
-                        window.setSize(gf::Vector2i(window.getSize().x, 640));
-                    }
-                    break;
-                case gf::EventType::MouseButtonPressed: //bouton de souris
+                case gf::EventType::MouseButtonPressed:
                     if (event.mouseButton.button == gf::MouseButton::Left) {
+                        mouse_click = event.mouseButton.coords;
                         switch (state) {
-                            case PLAYING_STATE::CONNEXION: //étape de connexion
+                            case PLAYING_STATE::CONNEXION:
                                 break;
-                            case PLAYING_STATE::PLACEMENT: //étape de placement
-                                if ((event.mouseButton.coords.x < 128) && (event.mouseButton.coords.y < 26)) {
+                            case PLAYING_STATE::PLACEMENT:
+                                if ((mouse_click.x < 128) && (mouse_click.y < 26)) { // envoie du plateau client
                                     sendFirstBoard(board.getAllPiece(), myColor, socket_client);
-                                    std::cout << "Should send board" << std::endl;
                                 } else {
-                                    mouse_click = event.mouseButton.coords;
-                                    if (selected == gf::Vector2i(-1, -1)) {
+                                    if (selected == gf::Vector2i(-1, -1)) { // pas de clique en mémoire
                                         selected = renderer.mapPixelToCoords(mouse_click, *currentView);
                                         selected = gf::Vector2i(selected.x / 64, selected.y / 64);
-                                        if ((selected.x < 0) || (selected.x > 9) || (selected.y < 0) || (selected.x > 9)) {
+                                        if ((selected.x < 0) || (selected.x > 9) || (selected.y < 0) || (selected.x > 9)) { //clique en dehors du monde de jeu
                                             selected = gf::Vector2i(-1, -1);
                                         }
-                                    } else {
+                                    } else { // clique en mémoire
                                         board.movePiece(selected, gf::Vector2i(renderer.mapPixelToCoords(mouse_click, *currentView).x / 64, renderer.mapPixelToCoords(mouse_click, *currentView).y / 64));
                                         selected = gf::Vector2i(-1, -1);
                                     }
                                 }
                                 break;
-                            case PLAYING_STATE::IN_GAME: //étape en jeu
-                                mouse_click = event.mouseButton.coords;
+                            case PLAYING_STATE::IN_GAME:
                                 if (selected == gf::Vector2i(-1, -1)) {
                                     selected = renderer.mapPixelToCoords(mouse_click, *currentView);
                                     selected = gf::Vector2i(selected.x / 64, selected.y / 64);
@@ -261,7 +211,16 @@ int main() {
                             std::cout << com.message << std::endl;
                             break;
                         case stg::ResponseCode::STARTING:
+                            if (state == PLAYING_STATE::CONNEXION) {
+                                std::cout << com.message << std::endl;
+                                state = PLAYING_STATE::PLACEMENT;
+                            }
+                            break;
                         case stg::ResponseCode::WAITING:
+                            if (state == PLAYING_STATE::CONNEXION) {
+                                std::cout << com.message << std::endl;
+                            }
+                            break;
                         default:
                             std::cout << "Information reçue non-reconnue ou non-permise en jeu." << std::endl;
                             break;
@@ -276,6 +235,22 @@ int main() {
                     break;
                 }
                 case stg::ServerAssignColor::type: // événements non pris en compte durant ce stade de jeu
+                {
+                    if (state == PLAYING_STATE::CONNEXION) {
+                        stg::ServerAssignColor assign = communication.as<stg::ServerAssignColor>();
+                        myColor = assign.color;
+                        myTurn = assign.starting;
+                        if( myColor == stg::Color::BLUE) {
+                            T_Uplay = gf::Texture("resources/uplay_blue.png");
+                            zone_to_place.setOutlineColor(gf::Color::Blue);
+                        } else {
+                            T_Uplay = gf::Texture("resources/uplay_red.png");
+                            zone_to_place.setOutlineColor(gf::Color::Red);
+                        }
+                        board.setPieceFromColor(myColor);
+                    }
+                    break;
+                }
                 default:
                     std::cout << "Information reçue non-reconnue ou non-permise en jeu." << std::endl;
                     break;
