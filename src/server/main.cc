@@ -12,6 +12,7 @@
 
 bool isSubmittedBoardOk(std::vector<stg::Piece> &board) {
     if (board.size() != 40) {
+        std::cout << "wrong size: " << board.size() << std::endl;
         return false;
     }
 
@@ -46,9 +47,14 @@ bool isSubmittedBoardOk(std::vector<stg::Piece> &board) {
         found[p.getPieceName()] += 1;
     }
 
-    std::cout << "plateau reçu" << std::endl;
+    for (auto pair : expected) {
+        if (pair.second != found.find(pair.first)->second) {
+            std::cout << found.find(pair.first)->second << " " << pair.first << " found out of " << pair.second << std::endl;
+            return false;
+        }
+    }
 
-    return expected == found;
+    return true;
 }
 
 /*
@@ -155,35 +161,34 @@ void dealWithRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet &pa
 
 bool dealWithRequestIfInitialBoard(gf::TcpSocket& sender, gf::Packet& packet, stg::ServerBoard& board) {
     gf::Packet to_send;
-    bool validBoard = false;
 
-    if (packet.getType() == stg::ClientBoardSubmit::type) {
-            stg::ClientBoardSubmit submit = packet.as<stg::ClientBoardSubmit>();
+    stg::ClientBoardSubmit submit = packet.as<stg::ClientBoardSubmit>();
 
-            bool boardOk = isSubmittedBoardOk(submit.board);
+    bool boardOk = isSubmittedBoardOk(submit.board);
 
-            stg::ServerMessage response;
+    stg::ServerMessage response;
             
-            if (boardOk) {
-                response.code = stg::ResponseCode::BOARD_OK;
-                response.message = "Board is valid.";
-                board.importSubmittedBoard(submit.color,submit.board);
-                validBoard = true;
-            } else {
-                response.code = stg::ResponseCode::BOARD_ERR;
-                response.message = "Board is invalid.";
-            }
+    if (boardOk) {
+        response.code = stg::ResponseCode::BOARD_OK;
+        response.message = "Board is valid.";
 
-            to_send.is(response);
-            sender.sendPacket(to_send);
+        std::cout << "Tries to import" << std::endl;
+        board.importSubmittedBoard(submit.color,submit.board);
+        std::cout << "Imported" << std::endl;
+    } else {
+        response.code = stg::ResponseCode::BOARD_ERR;
+        response.message = "Board is invalid.";
     }
 
-    return validBoard;
+    to_send.is(response);
+    sender.sendPacket(to_send);
+
+    return boardOk;
 }
 
 int main() {
 
-    gf::TcpListener listener("42690");
+    gf::TcpListener listener(PORT);
     gf::TcpSocket player1, player2;
     gf::Packet packet;
 
@@ -193,8 +198,10 @@ int main() {
         gf::TcpSocket client = listener.accept();
         if (!player1) {
             player1 = std::move(client);
+            player1.setNonBlocking();
         } else {
             player2 = std::move(client);
+            player2.setNonBlocking();
         }
 
         if(player1 && !player2) {
@@ -263,11 +270,14 @@ int main() {
 
         player1.recvPacket(packet);
         board1Received = dealWithRequestIfInitialBoard(player1,packet,board);
+        std::cout << "Board 1 valid: " << board1Received << std::endl;
 
         player2.recvPacket(packet);
         board2Received = dealWithRequestIfInitialBoard(player2,packet,board);
     
     }
+
+    std::cout << "Both boards were validated" << std::endl;
 
     while (inGame) {
         player1.recvPacket(packet);

@@ -7,7 +7,9 @@
 namespace stg {
 
     ServerBoard::ServerBoard() : board({}) {
-
+        for (int i = 0; i < 100; ++i) {
+            board.push_back(stg::Piece::makeBlankPiece());
+        }
     }
 
     bool ServerBoard::isMoveAllowed(int from_x,int from_y, int to_x, int to_y) const {

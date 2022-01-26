@@ -68,7 +68,13 @@ int main() {
     bool myTurn = false;
 
     //parametre de socket
-    gf::TcpSocket socket_client = gf::TcpSocket("localhost", "42690");
+    gf::TcpSocket socket_client = gf::TcpSocket(HOST, PORT);
+
+    if (!socket_client) {
+        std::cerr << "Connection to server couldn't be established" << std::endl;
+        return 1;
+    }
+
     std::thread packetsThread(threadPackets,std::ref(socket_client),std::ref(serverPackets));
     packetsThread.detach();
     stg::ClientHello data;
@@ -198,6 +204,7 @@ int main() {
                             case PLAYING_STATE::PLACEMENT: //étape de placement
                                 if ((event.mouseButton.coords.x < 128) && (event.mouseButton.coords.y < 26)) {
                                     sendFirstBoard(board.getAllPiece(), myColor, socket_client);
+                                    std::cout << "Should send board" << std::endl;
                                 } else {
                                     mouse_click = event.mouseButton.coords;
                                     if (selected == gf::Vector2i(-1, -1)) {

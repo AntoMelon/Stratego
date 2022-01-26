@@ -12,6 +12,9 @@
 
 #include "piece.h"
 
+#define HOST "localhost"
+#define PORT "4269"
+
 using namespace gf::literals;
 
 namespace stg {
