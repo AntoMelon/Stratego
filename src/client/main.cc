@@ -169,11 +169,10 @@ int main() {
     //ajouter les pieces au plateau
     if (myColor == stg::Color::RED) {
         zone_to_place.setOutlineColor(gf::Color::Red);
-        zone_to_place.setPosition({2, 384});
     } else {
         zone_to_place.setOutlineColor(gf::Color::Blue);
-        zone_to_place.setPosition({2, 2});
     }
+    zone_to_place.setPosition({2, 2});
     board.setPieceFromColor(myColor);
 
     //game
