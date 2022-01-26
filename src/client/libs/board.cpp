@@ -94,7 +94,7 @@ namespace stg {
 
         std::vector<stg::Piece> to_send;
 
-        for (int y = 0; y < 10; ++y) {
+        for (int y = 6; y < 10; ++y) {
 
             for (int x = 0; x < 10; ++x) {
 

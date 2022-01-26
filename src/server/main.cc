@@ -1,14 +1,31 @@
 #include <iostream>
 #include <random>
+#include <thread>
+
 
 #include <map>
 
 #include <gf/TcpListener.h>
 #include <gf/Packet.h>
 #include <gf/TcpSocket.h>
+#include <gf/Queue.h>
 
 #include "../common/protocol.h"
 #include "./server_board.h"
+
+
+//thread de gestion des packets
+auto threadPackets = [] (gf::TcpSocket &socket,gf::Queue<gf::Packet> &queue) {
+    gf::Packet packet;
+    for(;;) {
+        gf::SocketStatus status = socket.recvPacket(packet);
+        if (status == gf::SocketStatus::Close) {
+            return;
+        }
+        queue.push(packet);
+    }
+};
+
 
 bool isSubmittedBoardOk(std::vector<stg::Piece> &board) {
     if (board.size() != 40) {
@@ -258,6 +275,17 @@ int main() {
     resp.message = "Both players have connected. Starting the game.";
     packet.is(resp);
 
+
+    //lancer thread de gestions des packets
+    gf::Queue<gf::Packet> packetsFromP1, packetsFromP2;
+
+    std::thread packetsThreadP1(threadPackets,std::ref(player1),std::ref(packetsFromP1));
+    packetsThreadP1.detach();
+
+    std::thread packetsThreadP2(threadPackets,std::ref(player2),std::ref(packetsFromP2));
+    packetsThreadP2.detach();
+
+
     player1.sendPacket(packet);
     player2.sendPacket(packet);
 
@@ -267,27 +295,31 @@ int main() {
     bool board2Received = false;
 
     while (!board1Received || !board2Received) {
+        gf::Packet boardSubmission;
 
-        player1.recvPacket(packet);
-        board1Received = dealWithRequestIfInitialBoard(player1,packet,board);
-        std::cout << "Board 1 valid: " << board1Received << std::endl;
+        if (packetsFromP1.poll(boardSubmission)) {
+            board1Received = dealWithRequestIfInitialBoard(player1,boardSubmission,board);
+            std::cout << "Board 1 valid: " << board1Received << std::endl;
+        }
 
-        player2.recvPacket(packet);
-        board2Received = dealWithRequestIfInitialBoard(player2,packet,board);
+        if (packetsFromP2.poll(boardSubmission)) {
+            board2Received = dealWithRequestIfInitialBoard(player2,boardSubmission,board);
+            std::cout << "Board 2 valid: " << board2Received << std::endl;
+        }
     
     }
 
     std::cout << "Both boards were validated" << std::endl;
 
     while (inGame) {
-        player1.recvPacket(packet);
-        if (turn == 0) {
-            dealWithRequest(player1,player2,packet,board, p1Color == 0 ? stg::Color::RED : stg::Color::BLUE);
+        gf::Packet clientPacket;
+
+        if (packetsFromP1.poll(clientPacket) && turn == 0) {
+            dealWithRequest(player1,player2,clientPacket,board, p1Color == 0 ? stg::Color::RED : stg::Color::BLUE);
         }
 
-        player2.recvPacket(packet);
-        if (turn == 1) {
-            dealWithRequest(player2,player1,packet,board, p1Color == 0 ? stg::Color::BLUE : stg::Color::RED);
+        if (packetsFromP2.poll(clientPacket) && turn == 1) {
+            dealWithRequest(player2,player1,clientPacket,board, p1Color == 0 ? stg::Color::BLUE : stg::Color::RED);
         }
     }
 
