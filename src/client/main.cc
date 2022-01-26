@@ -21,10 +21,14 @@
 #define OFFSET_X 0
 #define OFFSET_Y 150
 
-//etape du jeu
+/*
+ * different stage of the game
+ */
 enum PLAYING_STATE {CONNEXION, PLACEMENT, IN_GAME, END};
 
-//thread de gestion des packets
+/*
+ * Packet thread
+ */
 auto threadPackets = [] (gf::TcpSocket &socket,gf::Queue<gf::Packet> &queue) {
     gf::Packet packet;
     for(;;) {
@@ -36,6 +40,9 @@ auto threadPackets = [] (gf::TcpSocket &socket,gf::Queue<gf::Packet> &queue) {
     }
 };
 
+/*
+ * send the first message to the server
+ */
 void sendFirstMessage(gf::TcpSocket &_socket) {
     stg::ClientHello data;
     data.name = "client";
@@ -44,6 +51,9 @@ void sendFirstMessage(gf::TcpSocket &_socket) {
     _socket.sendPacket(data2);
 }
 
+/*
+ * send first board to the server
+ */
 void sendFirstBoard(std::vector<stg::Piece> _board, stg::Color _color, gf::TcpSocket &_socket) {
     stg::ClientBoardSubmit firstBoard;
     firstBoard.color = _color;
@@ -54,6 +64,9 @@ void sendFirstBoard(std::vector<stg::Piece> _board, stg::Color _color, gf::TcpSo
     std::cout << "Should send board" << std::endl;
 }
 
+/*
+ * send a try of move to the server
+ */
 void sendMove(gf::Vector2i _from, gf::Vector2i _to, gf::TcpSocket &_socket) {
     stg::ClientMoveRequest move;
     move.from_x = _from.x;
@@ -65,7 +78,10 @@ void sendMove(gf::Vector2i _from, gf::Vector2i _to, gf::TcpSocket &_socket) {
     _socket.sendPacket(packet_move);
 }
 
-
+/*
+ * main function
+ * simulate a game
+ */
 int main() {
 
     //packet arrivant
@@ -129,59 +145,62 @@ int main() {
     zone_to_place.setSize({636, 252});
     zone_to_place.setColor(gf::Color::Transparent);
     zone_to_place.setOutlineThickness(2);
+    zone_to_place.setPosition({2, 386});
 
-    //ajouter les pieces au plateau
-    zone_to_place.setPosition({2, 2});
 
-    //game
     gf::Event event;
     gf::Packet communication;
     gf::Vector2i selected = gf::Vector2i(-1,-1);
     gf::Vector2i mouse_click = selected;
 
+    /*
+     * main loop
+     * display windows and launch every function linked to an event or a call from the server
+     */
     while (window.isOpen()) {
-
-        //décharger la file d'événement
+        /*
+         * Take event from user and do all the things linked
+         */
         while (window.pollEvent(event)) {
             switch (event.type) {
-                case gf::EventType::Closed: //fermeture de fenêtre
+                case gf::EventType::Closed: // close the window
                     window.close();
                     break;
-                case gf::EventType::MouseButtonPressed:
+                case gf::EventType::MouseButtonPressed: //if click on the window
                     if (event.mouseButton.button == gf::MouseButton::Left) {
                         mouse_click = event.mouseButton.coords;
                         switch (state) {
                             case PLAYING_STATE::CONNEXION:
                                 break;
                             case PLAYING_STATE::PLACEMENT:
-                                if ((mouse_click.x < 128) && (mouse_click.y < 26)) { // envoie du plateau client
+                                if ((mouse_click.x < 128) && (mouse_click.y < 26)) { // send the first board
                                     sendFirstBoard(board.getAllPiece(), myColor, socket_client);
                                 } else {
-                                    if (selected == gf::Vector2i(-1, -1)) { // pas de clique en mémoire
+                                    if (selected == gf::Vector2i(-1, -1)) { // if no click on memory -> put coords in memory
                                         selected = renderer.mapPixelToCoords(mouse_click, *currentView);
                                         selected = gf::Vector2i(selected.x / 64, selected.y / 64);
-                                        if ((selected.x < 0) || (selected.x > 9) || (selected.y < 0) || (selected.x > 9)) { //clique en dehors du monde de jeu
+                                        if ((selected.x < 0) || (selected.x > 9) || (selected.y < 0) || (selected.x > 9)) { // click is outside the world box
                                             selected = gf::Vector2i(-1, -1);
                                         }
-                                    } else { // clique en mémoire
+                                    } else { // if click on memory -> move piece on board
                                         board.movePiece(selected, gf::Vector2i(renderer.mapPixelToCoords(mouse_click, *currentView).x / 64, renderer.mapPixelToCoords(mouse_click, *currentView).y / 64));
                                         selected = gf::Vector2i(-1, -1);
                                     }
                                 }
                                 break;
                             case PLAYING_STATE::IN_GAME:
-                                if (selected == gf::Vector2i(-1, -1)) {
+                                if (selected == gf::Vector2i(-1, -1)) { // if no click on memory -> put coords in memory
                                     selected = renderer.mapPixelToCoords(mouse_click, *currentView);
                                     selected = gf::Vector2i(selected.x / 64, selected.y / 64);
-                                    if ((selected.x < 0) || (selected.x > 9) || (selected.y < 0) || (selected.x > 9)) {
+                                    if ((selected.x < 0) || (selected.x > 9) || (selected.y < 0) || (selected.x > 9)) { // click is outside the world box
                                         selected = gf::Vector2i(-1, -1);
                                     }
-                                } else {
+                                } else { // send move to the server
                                     sendMove(selected, gf::Vector2i(renderer.mapPixelToCoords(mouse_click, *currentView).x / 64, renderer.mapPixelToCoords(mouse_click, *currentView).y / 64), socket_client);
                                     selected = gf::Vector2i(-1, -1);
                                 }
                                 break;
-                            case PLAYING_STATE::END: //étape de partie finie
+                            case PLAYING_STATE::END:
                                 break;
                             default:
                                 break;
@@ -193,21 +212,24 @@ int main() {
             }
             views.processEvent(event);
         }
-        if (serverPackets.poll(communication)) { //reception de packets
+        /*
+         * Take message from server and all the things linked
+         */
+        if (serverPackets.poll(communication)) {
             switch(communication.getType()) {
-                case stg::ServerMessage::type:
+                case stg::ServerMessage::type: // take message in function of code
                 {
                     stg::ServerMessage com = communication.as<stg::ServerMessage>();
                     switch (com.code) {
-                        case stg::ResponseCode::BOARD_OK: //plateau bon
+                        case stg::ResponseCode::BOARD_OK:
                             std::cout << com.message << std::endl;
                             state = PLAYING_STATE::IN_GAME;
                             break;
-                        case stg::ResponseCode::BOARD_ERR: //erreur dans le plateau
+                        case stg::ResponseCode::BOARD_ERR:
                             std::cout << com.message << std::endl;
                             state = PLAYING_STATE::PLACEMENT;
                             break;
-                        case stg::ResponseCode::MOVE_ERR: //problème dans le mouvement
+                        case stg::ResponseCode::MOVE_ERR:
                             std::cout << com.message << std::endl;
                             break;
                         case stg::ResponseCode::STARTING:
@@ -227,14 +249,14 @@ int main() {
                     }
                     break;
                 }
-                case stg::ServerMoveNotif::type: //mouvement effectué par un joueur
+                case stg::ServerMoveNotif::type: // if a client do a move
                 {
                     stg::ServerMoveNotif com = communication.as<stg::ServerMoveNotif>();
                     board.movePiece(gf::Vector2i({com.from_x, com.from_y}), gf::Vector2i({com.to_x, com.to_y}));
                     myTurn = !myTurn;
                     break;
                 }
-                case stg::ServerAssignColor::type: // événements non pris en compte durant ce stade de jeu
+                case stg::ServerAssignColor::type: // assign a color to the client (only one time)
                 {
                     if (state == PLAYING_STATE::CONNEXION) {
                         stg::ServerAssignColor assign = communication.as<stg::ServerAssignColor>();
@@ -257,11 +279,13 @@ int main() {
             }
         }
 
+        /*
+         * display all element in the window
+         */
         if (state == PLAYING_STATE::PLACEMENT || state == PLAYING_STATE::IN_GAME) { // rendu graphique
 
             renderer.clear();
 
-            //afficher dans monde
             currentView->setViewport(maxiViewport);
             renderer.setView(*currentView);
             renderer.draw(extendedBackground);
@@ -273,8 +297,6 @@ int main() {
             gf::RectI viewport = renderer.getViewport(*currentView);
             frame.setPosition(viewport.getPosition());
             frame.setSize(viewport.getSize());
-
-            //afficher dans la fenêtre
             renderer.setView(screenView);
             renderer.draw(frame);
             if (state == PLAYING_STATE::PLACEMENT) {

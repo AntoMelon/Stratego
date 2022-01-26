@@ -110,7 +110,7 @@ namespace stg {
 
     void Board::setPieceFromColor(stg::Color _color) {
 
-        int x = 0, y = 6;
+        int x = 0, y = 0;
         while (x < 8) {
             setPiece(x,y,stg::Piece(stg::PieceName::ECLAIREUR,_color));
             ++x;
