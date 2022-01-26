@@ -40,6 +40,19 @@ auto threadPackets = [] (gf::TcpSocket &socket,gf::Queue<gf::Packet> &queue) {
     }
 };
 
+gf::Vector2i select_on_board(gf::Vector2i _selection) {
+
+    _selection.x = _selection.x / 64;
+    _selection.y = _selection.y / 64;
+
+    if ((_selection.x < 0) || (_selection.x > 9) || (_selection.y < 0) || (_selection.x > 9)) {
+        return gf::Vector2i(-1, -1);
+    }
+
+    return _selection;
+
+}
+
 /*
  * send the first message to the server
  */
@@ -109,11 +122,13 @@ int main() {
     gf::RectF extendedWorld = world.grow(100);
 
     gf::Texture T_Uplay;
+    gf::Texture T_waiting_screen("resources/waiting.png");
     gf::Texture T_starting_button("resources/play_button.png");
-    gf::Texture cadre_selection(gf::Path("resources/selected_indicator.png"));
+    gf::Texture T_cadre_selection(gf::Path("resources/selected_indicator.png"));
 
     gf::Sprite S_Uplay(T_Uplay);
-    gf::Sprite S_selected_box(cadre_selection);
+    gf::Sprite S_waiting_screen(T_waiting_screen);
+    gf::Sprite S_selected_box(T_cadre_selection);
     gf::Sprite S_starting_button(T_starting_button);
 
     gf::ViewContainer views;
@@ -161,50 +176,53 @@ int main() {
          */
         while (window.pollEvent(event)) {
             switch (event.type) {
+
                 case gf::EventType::Closed: // close the window
                     window.close();
                     break;
+
+                case gf::EventType::KeyPressed:
+                    switch (event.key.keycode) {
+                        case gf::Keycode::F11:
+                            window.toggleFullscreen();
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+
                 case gf::EventType::MouseButtonPressed: //if click on the window
                     if (event.mouseButton.button == gf::MouseButton::Left) {
                         mouse_click = event.mouseButton.coords;
                         switch (state) {
-                            case PLAYING_STATE::CONNEXION:
-                                break;
+
                             case PLAYING_STATE::PLACEMENT:
                                 if ((mouse_click.x < 128) && (mouse_click.y < 26)) { // send the first board
                                     sendFirstBoard(board.getAllPiece(), myColor, socket_client);
                                 } else {
                                     if (selected == gf::Vector2i(-1, -1)) { // if no click on memory -> put coords in memory
-                                        selected = renderer.mapPixelToCoords(mouse_click, *currentView);
-                                        selected = gf::Vector2i(selected.x / 64, selected.y / 64);
-                                        if ((selected.x < 0) || (selected.x > 9) || (selected.y < 0) || (selected.x > 9)) { // click is outside the world box
-                                            selected = gf::Vector2i(-1, -1);
-                                        }
+                                        selected = select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView));
                                     } else { // if click on memory -> move piece on board
-                                        board.movePiece(selected, gf::Vector2i(renderer.mapPixelToCoords(mouse_click, *currentView).x / 64, renderer.mapPixelToCoords(mouse_click, *currentView).y / 64));
+                                        board.movePiece(selected, select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView)));
                                         selected = gf::Vector2i(-1, -1);
                                     }
                                 }
                                 break;
+
                             case PLAYING_STATE::IN_GAME:
                                 if (selected == gf::Vector2i(-1, -1)) { // if no click on memory -> put coords in memory
-                                    selected = renderer.mapPixelToCoords(mouse_click, *currentView);
-                                    selected = gf::Vector2i(selected.x / 64, selected.y / 64);
-                                    if ((selected.x < 0) || (selected.x > 9) || (selected.y < 0) || (selected.x > 9)) { // click is outside the world box
-                                        selected = gf::Vector2i(-1, -1);
-                                    }
+                                    selected = select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView));
                                 } else { // send move to the server
-                                    sendMove(selected, gf::Vector2i(renderer.mapPixelToCoords(mouse_click, *currentView).x / 64, renderer.mapPixelToCoords(mouse_click, *currentView).y / 64), socket_client);
+                                    sendMove(selected, select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView)), socket_client);
                                     selected = gf::Vector2i(-1, -1);
                                 }
-                                break;
-                            case PLAYING_STATE::END:
                                 break;
                             default:
                                 break;
                         }
                     }
                     break;
+
                 default:
                     break;
             }
@@ -215,38 +233,47 @@ int main() {
          */
         if (serverPackets.poll(communication)) {
             switch(communication.getType()) {
+
                 case stg::ServerMessage::type: // take message in function of code
                 {
+
                     stg::ServerMessage com = communication.as<stg::ServerMessage>();
                     switch (com.code) {
+
                         case stg::ResponseCode::BOARD_OK:
                             std::cout << com.message << std::endl;
                             state = PLAYING_STATE::IN_GAME;
                             break;
+
                         case stg::ResponseCode::BOARD_ERR:
                             std::cout << com.message << std::endl;
                             state = PLAYING_STATE::PLACEMENT;
                             break;
+
                         case stg::ResponseCode::MOVE_ERR:
                             std::cout << com.message << std::endl;
                             break;
+
                         case stg::ResponseCode::STARTING:
                             if (state == PLAYING_STATE::CONNEXION) {
                                 std::cout << com.message << std::endl;
                                 state = PLAYING_STATE::PLACEMENT;
                             }
                             break;
+
                         case stg::ResponseCode::WAITING:
                             if (state == PLAYING_STATE::CONNEXION) {
                                 std::cout << com.message << std::endl;
                             }
                             break;
+
                         default:
                             std::cout << "Information reçue non-reconnue ou non-permise en jeu." << std::endl;
                             break;
                     }
                     break;
                 }
+
                 case stg::ServerMoveNotif::type: // if a client do a move
                 {
                     stg::ServerMoveNotif com = communication.as<stg::ServerMoveNotif>();
@@ -254,6 +281,7 @@ int main() {
                     myTurn = !myTurn;
                     break;
                 }
+
                 case stg::ServerAssignColor::type: // assign a color to the client (only one time)
                 {
                     if (state == PLAYING_STATE::CONNEXION) {
@@ -271,6 +299,7 @@ int main() {
                     }
                     break;
                 }
+
                 default:
                     std::cout << "Information reçue non-reconnue ou non-permise en jeu." << std::endl;
                     break;
@@ -280,34 +309,54 @@ int main() {
         /*
          * display all element in the window
          */
-        if (state == PLAYING_STATE::PLACEMENT || state == PLAYING_STATE::IN_GAME) { // rendu graphique
+        renderer.clear();
+        currentView->setViewport(maxiViewport);
+        renderer.setView(*currentView);
+        renderer.draw(extendedBackground);
+        renderer.draw(background);
 
-            renderer.clear();
+        gf::RectI viewport;
 
-            currentView->setViewport(maxiViewport);
-            renderer.setView(*currentView);
-            renderer.draw(extendedBackground);
-            renderer.draw(background);
-            board.render(renderer, currentView);
-            if (state == PLAYING_STATE::PLACEMENT) {
+        switch(state) {
+            case PLAYING_STATE::CONNEXION:
+                renderer.draw(S_waiting_screen);
+                break;
+            case PLAYING_STATE::PLACEMENT:
+                board.render(renderer, currentView);
                 renderer.draw(zone_to_place);
-            }
-            if (selected != gf::Vector2i({-1,-1})) {
-                S_selected_box.setPosition(gf::Vector2i({selected.x*64, selected.y*64}));
-                renderer.draw(S_selected_box);
-            }
-            gf::RectI viewport = renderer.getViewport(*currentView);
-            frame.setPosition(viewport.getPosition());
-            frame.setSize(viewport.getSize());
-            renderer.setView(screenView);
-            renderer.draw(frame);
-            if (state == PLAYING_STATE::PLACEMENT) {
+                if (selected != gf::Vector2i({-1,-1})) {
+                    S_selected_box.setPosition(gf::Vector2i({selected.x * 64, selected.y * 64}));
+                    renderer.draw(S_selected_box);
+                }
+                viewport = renderer.getViewport(*currentView);
+                frame.setPosition(viewport.getPosition());
+                frame.setSize(viewport.getSize());
+                renderer.setView(screenView);
+                renderer.draw(frame);
                 renderer.draw(S_starting_button);
-            }
-            renderer.draw(S_Uplay);
-            renderer.display();
+                renderer.draw(S_Uplay);
+                break;
+
+            case PLAYING_STATE::IN_GAME:
+                board.render(renderer, currentView);
+                if (selected != gf::Vector2i({-1,-1})) {
+                    S_selected_box.setPosition(gf::Vector2i({selected.x*64, selected.y*64}));
+                    renderer.draw(S_selected_box);
+                }
+                viewport = renderer.getViewport(*currentView);
+                frame.setPosition(viewport.getPosition());
+                frame.setSize(viewport.getSize());
+                renderer.setView(screenView);
+                renderer.draw(frame);
+                renderer.draw(S_Uplay);
+                break;
+
+            case PLAYING_STATE::END:
+            default:
+                break;
         }
 
+        renderer.display();
     }
 
     return 0;
