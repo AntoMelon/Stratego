@@ -84,7 +84,6 @@ void sendMove(gf::Vector2i _from, gf::Vector2i _to, gf::TcpSocket &_socket) {
  */
 int main() {
 
-    //packet arrivant
     gf::Queue<gf::Packet> serverPackets;
     gf::TcpSocket socket_client = gf::TcpSocket(HOST, PORT);
     if (!socket_client) {
@@ -92,61 +91,60 @@ int main() {
         return 1;
     }
 
-    //paramètres définissant le joueur
-    bool myTurn = false;
-    stg::Color myColor;
     stg::Board board;
+    bool myTurn = false;
+    stg::Color myColor = stg::Color::BLUE;
     PLAYING_STATE state = PLAYING_STATE::CONNEXION;
 
-    //lancer thread de gestion des packets
     std::thread packetsThread(threadPackets,std::ref(socket_client),std::ref(serverPackets));
     packetsThread.detach();
 
     sendFirstMessage(socket_client);
 
-    //paramètre de la fenetre
     static constexpr gf::Vector2i ScreenSize(860, 640);
     gf::Window window("Stratego online", ScreenSize);
     gf::RenderWindow renderer(window);
 
-    //monde de jeu
     gf::RectF world = gf::RectF::fromPositionSize({ 0, 0 }, {640, 640}); //monde du jeu
     gf::RectF extendedWorld = world.grow(100);
 
-    //vue
+    gf::Texture T_Uplay;
+    gf::Texture T_starting_button("resources/play_button.png");
+    gf::Texture cadre_selection(gf::Path("resources/selected_indicator.png"));
+
+    gf::Sprite S_Uplay(T_Uplay);
+    gf::Sprite S_selected_box(cadre_selection);
+    gf::Sprite S_starting_button(T_starting_button);
+
     gf::ViewContainer views;
-    gf::FitView fitView(world); //vue adaptée à la fenêtre
+    gf::FitView fitView(world);
+    gf::ScreenView screenView;
+
     views.addView(fitView);
-    gf::ScreenView screenView; //vue de la fenêtre complète
     views.addView(screenView);
     views.setInitialFramebufferSize(ScreenSize);
-    gf::AdaptativeView *currentView = &fitView; // vue concernée par les prochain changement
+
+    gf::AdaptativeView *currentView = &fitView;
     gf::RectF maxiViewport = gf::RectF::fromPositionSize({ 0.0f, 0.0f }, { 1.0f, 1.0f });
-    //background
-    gf::RectangleShape background(world);
-    background.setColor(gf::Color::White);
-    gf::RectangleShape extendedBackground(extendedWorld);
-    extendedBackground.setColor(gf::Color::Gray());
-    // hud
-    gf::Texture T_starting_button("resources/play_button.png");
-    gf::Sprite S_starting_button(T_starting_button);
-    S_starting_button.setPosition({0, 0});
-    gf::Texture T_Uplay;
-    gf::Sprite S_Uplay(T_Uplay);
-    S_Uplay.setPosition({0, 100});
-    //paramètrage des vues
-    gf::RectangleShape frame(maxiViewport.getSize() * ScreenSize);
-    frame.setPosition(maxiViewport.getPosition() * ScreenSize);
-    frame.setColor(gf::Color::Transparent);
-    //cadre de selection
-    gf::Texture cadre_selection(gf::Path("resources/selected_indicator.png"));
-    //zone de placement des pions
+
     gf::RectangleShape zone_to_place;
+    gf::RectangleShape background(world);
+    gf::RectangleShape extendedBackground(extendedWorld);
+    gf::RectangleShape frame(maxiViewport.getSize() * ScreenSize);
+
+    background.setColor(gf::Color::White);
+    frame.setColor(gf::Color::Transparent);
+    extendedBackground.setColor(gf::Color::Gray());
+
     zone_to_place.setSize({636, 252});
     zone_to_place.setColor(gf::Color::Transparent);
-    zone_to_place.setOutlineThickness(2);
-    zone_to_place.setPosition({2, 386});
 
+    zone_to_place.setOutlineThickness(2);
+
+    S_Uplay.setPosition({0, 100});
+    zone_to_place.setPosition({2, 386});
+    S_starting_button.setPosition({0, 0});
+    frame.setPosition(maxiViewport.getPosition() * ScreenSize);
 
     gf::Event event;
     gf::Packet communication;
@@ -293,6 +291,10 @@ int main() {
             board.render(renderer, currentView);
             if (state == PLAYING_STATE::PLACEMENT) {
                 renderer.draw(zone_to_place);
+            }
+            if (selected != gf::Vector2i({-1,-1})) {
+                S_selected_box.setPosition(gf::Vector2i({selected.x*64, selected.y*64}));
+                renderer.draw(S_selected_box);
             }
             gf::RectI viewport = renderer.getViewport(*currentView);
             frame.setPosition(viewport.getPosition());
