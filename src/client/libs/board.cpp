@@ -215,6 +215,9 @@ namespace stg {
     }
 
     std::pair<std::string, bool> Board::movePiece(gf::Vector2i from, gf::Vector2i to) {
+        if ((to.x < 0) || (to.x > 9) || (to.y < 0) || (to.y > 9)) {
+            return std::pair("Case vide", false);
+        }
         if(board[from.x][from.y].second.getPieceName()==PieceName::NONE) {
             return std::pair("Case vide", false);
         }
