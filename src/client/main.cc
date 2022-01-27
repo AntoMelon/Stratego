@@ -16,6 +16,7 @@
 #include <gf/Shapes.h>
 #include <gf/ViewContainer.h>
 #include <gf/Views.h>
+#include <gf/Text.h>
 
 
 #define OFFSET_X 0
@@ -114,18 +115,17 @@ int main() {
 
     sendFirstMessage(socket_client);
 
-    static constexpr gf::Vector2i ScreenSize(860, 640);
+    static constexpr gf::Vector2i ScreenSize(860, 680);
     gf::Window window("Stratego online", ScreenSize);
     gf::RenderWindow renderer(window);
 
-    gf::RectF world = gf::RectF::fromPositionSize({ 0, 0 }, {640, 640}); //monde du jeu
+    gf::RectF world = gf::RectF::fromPositionSize({ 0, 0 }, {640, 680}); //monde du jeu
     gf::RectF extendedWorld = world.grow(100);
 
     gf::Texture T_Uplay;
     gf::Texture T_waiting_screen("resources/waiting.png");
     gf::Texture T_starting_button("resources/play_button.png");
     gf::Texture T_cadre_selection(gf::Path("resources/selected_indicator.png"));
-
     gf::Sprite S_Uplay(T_Uplay);
     gf::Sprite S_waiting_screen(T_waiting_screen);
     gf::Sprite S_selected_box(T_cadre_selection);
@@ -134,11 +134,9 @@ int main() {
     gf::ViewContainer views;
     gf::FitView fitView(world);
     gf::ScreenView screenView;
-
     views.addView(fitView);
     views.addView(screenView);
     views.setInitialFramebufferSize(ScreenSize);
-
     gf::AdaptativeView *currentView = &fitView;
     gf::RectF maxiViewport = gf::RectF::fromPositionSize({ 0.0f, 0.0f }, { 1.0f, 1.0f });
 
@@ -147,11 +145,17 @@ int main() {
     gf::RectangleShape extendedBackground(extendedWorld);
     gf::RectangleShape frame(maxiViewport.getSize() * ScreenSize);
 
-    background.setColor(gf::Color::White);
+    background.setColor(gf::Color::Black);
     frame.setColor(gf::Color::Transparent);
     extendedBackground.setColor(gf::Color::Gray());
 
+    gf::Font font("resources/arial.ttf");
+    gf::Text txt("Message", font, 20);
+    txt.setColor(gf::Color::White);
+    txt.setPosition({0, 660});
+
     zone_to_place.setSize({636, 252});
+
     zone_to_place.setColor(gf::Color::Transparent);
 
     zone_to_place.setOutlineThickness(2);
@@ -241,34 +245,34 @@ int main() {
                     switch (com.code) {
 
                         case stg::ResponseCode::BOARD_OK:
-                            std::cout << com.message << std::endl;
+                            txt.setString(com.message);
                             state = PLAYING_STATE::IN_GAME;
                             break;
 
                         case stg::ResponseCode::BOARD_ERR:
-                            std::cout << com.message << std::endl;
+                            txt.setString(com.message);
                             state = PLAYING_STATE::PLACEMENT;
                             break;
 
                         case stg::ResponseCode::MOVE_ERR:
-                            std::cout << com.message << std::endl;
+                            txt.setString(com.message);
                             break;
 
                         case stg::ResponseCode::STARTING:
                             if (state == PLAYING_STATE::CONNEXION) {
-                                std::cout << com.message << std::endl;
+                                txt.setString(com.message);
                                 state = PLAYING_STATE::PLACEMENT;
                             }
                             break;
 
                         case stg::ResponseCode::WAITING:
                             if (state == PLAYING_STATE::CONNEXION) {
-                                std::cout << com.message << std::endl;
+                                txt.setString(com.message);
                             }
                             break;
 
                         default:
-                            std::cout << "Information reçue non-reconnue ou non-permise en jeu." << std::endl;
+                            txt.setString("Information reçue non-reconnue ou non-permise en jeu.");
                             break;
                     }
                     break;
@@ -301,7 +305,7 @@ int main() {
                 }
 
                 default:
-                    std::cout << "Information reçue non-reconnue ou non-permise en jeu." << std::endl;
+                    txt.setString("Information reçue non-reconnue ou non-permise en jeu.");
                     break;
             }
         }
@@ -320,10 +324,12 @@ int main() {
         switch(state) {
             case PLAYING_STATE::CONNEXION:
                 renderer.draw(S_waiting_screen);
+                renderer.draw(txt);
                 break;
             case PLAYING_STATE::PLACEMENT:
                 board.render(renderer, currentView);
                 renderer.draw(zone_to_place);
+                renderer.draw(txt);
                 if (selected != gf::Vector2i({-1,-1})) {
                     S_selected_box.setPosition(gf::Vector2i({selected.x * 64, selected.y * 64}));
                     renderer.draw(S_selected_box);
@@ -339,6 +345,7 @@ int main() {
 
             case PLAYING_STATE::IN_GAME:
                 board.render(renderer, currentView);
+                renderer.draw(txt);
                 if (selected != gf::Vector2i({-1,-1})) {
                     S_selected_box.setPosition(gf::Vector2i({selected.x*64, selected.y*64}));
                     renderer.draw(S_selected_box);
