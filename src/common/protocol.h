@@ -108,7 +108,7 @@ namespace stg {
 
     template<typename Archive>
     Archive operator|(Archive& ar, ServerMoveNotif& move) {
-        return ar | move.from_x | move.from_y | move.to_x | move.to_y | move.str_atk | move.str_def | move.atk_alive | move.def_alive;
+        return ar | move.from_x | move.from_y | move.to_x | move.to_y | move.str_atk | move.str_def | move.atk_alive | move.def_alive | move.win | move.lose;
     }
 }
 
