@@ -46,9 +46,7 @@ gf::Vector2i select_on_board(gf::Vector2i _selection) {
     _selection.x = _selection.x / 64;
     _selection.y = _selection.y / 64;
 
-    if ((_selection.x < 0) || (_selection.x > 9) || (_selection.y < 0) || (_selection.x > 9)) {
-        return gf::Vector2i(-1, -1);
-    }
+    if ((_selection.x < 0) || (_selection.x > 9) || (_selection.y < 0) || (_selection.x > 9)) return gf::Vector2i(-1, -1);
 
     return _selection;
 
@@ -206,6 +204,7 @@ int main() {
                                 } else {
                                     if (selected == gf::Vector2i(-1, -1)) { // if no click on memory -> put coords in memory
                                         selected = select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView));
+                                        if (board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::NONE) selected = gf::Vector2i(-1, -1);
                                     } else { // if click on memory -> move piece on board
                                         board.movePiece(selected, select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView)));
                                         selected = gf::Vector2i(-1, -1);
@@ -216,6 +215,7 @@ int main() {
                             case PLAYING_STATE::IN_GAME:
                                 if (selected == gf::Vector2i(-1, -1)) { // if no click on memory -> put coords in memory
                                     selected = select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView));
+                                    if (board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::NONE) selected = gf::Vector2i(-1, -1);
                                 } else { // send move to the server
                                     sendMove(selected, select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView)), socket_client);
                                     selected = gf::Vector2i(-1, -1);
