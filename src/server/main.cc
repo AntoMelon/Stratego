@@ -295,6 +295,7 @@ int main() {
     bool board2Received = false;
 
     while (!board1Received || !board2Received) {
+
         gf::Packet boardSubmission;
 
         if (packetsFromP1.poll(boardSubmission)) {
@@ -312,6 +313,7 @@ int main() {
     std::cout << "Both boards were validated" << std::endl;
 
     while (inGame) {
+
         gf::Packet clientPacket;
 
         if (packetsFromP1.poll(clientPacket) && turn == 0) {
@@ -321,6 +323,7 @@ int main() {
         if (packetsFromP2.poll(clientPacket) && turn == 1) {
             dealWithRequest(player2,player1,clientPacket,board, p1Color == 0 ? stg::Color::BLUE : stg::Color::RED);
         }
+
     }
 
 }

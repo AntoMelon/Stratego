@@ -12,6 +12,8 @@
 #include <gf/ViewContainer.h>
 #include <gf/Views.h>
 
+#define SPRITE_SIZE 64
+
 namespace stg {
 
     enum TileType{

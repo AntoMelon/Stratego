@@ -18,9 +18,9 @@ namespace stg {
 
     Board::Board() {
         this->board = std::vector<std::vector<std::pair<Square,Piece>>>();
-        for(int i = 0; i < 10; i++) {
+        for(int i = COORD_MIN; i <= COORD_MAX; i++) {
             std::vector<std::pair<Square,Piece>> row;
-            for(int j = 0; j < 10; j++) {
+            for(int j = COORD_MIN; j <= COORD_MAX; j++) {
                 if (j==4 || j==5) {
                     if(i==2 || i==3 || i==6 || i==7) {
                         row.push_back(std::pair(Square(TileType::River, false), Piece::makeBlankPiece()));
@@ -94,9 +94,9 @@ namespace stg {
 
         std::vector<stg::Piece> to_send;
 
-        for (int y = 6; y < 10; ++y) {
+        for (int y = 6; y <= COORD_MAX; ++y) {
 
-            for (int x = 0; x < 10; ++x) {
+            for (int x = COORD_MIN; x <= COORD_MAX; ++x) {
 
                 to_send.push_back(board[x][y].second);
 
@@ -110,7 +110,7 @@ namespace stg {
 
     void Board::setPieceFromColor(stg::Color _color) {
 
-        int x = 0, y = 0;
+        int x = COORD_MIN, y = COORD_MIN;
         while (x < 8) {
             setPiece(x,y,stg::Piece(stg::PieceName::ECLAIREUR,_color));
             ++x;
@@ -160,30 +160,30 @@ namespace stg {
 
     void Board::render(gf::RenderWindow &renderer, gf::AdaptativeView *view) {
         renderer.setView(*view);
-        for(int i = 0; i < 10; i++) {
-            for(int j = 0; j < 10; j++) {
+        for(int i = COORD_MIN; i <= COORD_MAX; i++) {
+            for(int j = COORD_MIN; j <= COORD_MAX; j++) {
                 gf::Sprite sprite;
-                sprite.setPosition(gf::Vector2f(i*64, j*64));
+                sprite.setPosition(gf::Vector2f(i*SPRITE_SIZE, j*SPRITE_SIZE));
                 if(board[i][j].first.getType() == TileType::Land) {
-                    if(j==0) {
-                        if(i==0) {
+                    if(j==COORD_MIN) {
+                        if(i==COORD_MIN) {
                             sprite.setTexture(manager.getTexture(gf::Path(tileTextures.at("land_top_left_edge"))));
-                        } else if(i==9) {
+                        } else if(i==COORD_MAX) {
                             sprite.setTexture(manager.getTexture(gf::Path(tileTextures.at("land_top_right_edge"))));
                         } else {
                             sprite.setTexture(manager.getTexture(gf::Path(tileTextures.at("land_top_side"))));
                         }
-                    } else if(j==9) {
-                        if(i==0) {
+                    } else if(j==COORD_MAX) {
+                        if(i==COORD_MIN) {
                             sprite.setTexture(manager.getTexture(gf::Path(tileTextures.at("land_bot_left_edge"))));
-                        } else if(i==9) {
+                        } else if(i==COORD_MAX) {
                             sprite.setTexture(manager.getTexture(gf::Path(tileTextures.at("land_bot_right_edge"))));
                         } else {
                             sprite.setTexture(manager.getTexture(gf::Path(tileTextures.at("land_bot_side"))));
                         }
-                    } else if(i==0) {
+                    } else if(i==COORD_MIN) {
                         sprite.setTexture(manager.getTexture(gf::Path(tileTextures.at("land_left_side"))));
-                    } else if(i==9) {
+                    } else if(i==COORD_MAX) {
                         sprite.setTexture(manager.getTexture(gf::Path(tileTextures.at("land_right_side"))));
                     } else {
                         sprite.setTexture(manager.getTexture(gf::Path(tileTextures.at("land"))));
@@ -206,7 +206,7 @@ namespace stg {
                 renderer.draw(sprite);
                 if(board[i][j].second.getPieceName()!=PieceName::NONE) {
                     gf::Sprite sprite;
-                    sprite.setPosition(gf::Vector2f(i*64, j*64));
+                    sprite.setPosition(gf::Vector2f(i*SPRITE_SIZE, j*SPRITE_SIZE));
                     sprite.setTexture(manager.getTexture(gf::Path(pieceTextures.at(std::pair(board[i][j].second.getPieceName(), board[i][j].second.getColor())))));
                     renderer.draw(sprite);
                 }
@@ -215,7 +215,7 @@ namespace stg {
     }
 
     std::pair<std::string, bool> Board::movePiece(gf::Vector2i from, gf::Vector2i to) {
-        if ((to.x < 0) || (to.x > 9) || (to.y < 0) || (to.y > 9)) {
+        if ((to.x < COORD_MIN) || (to.x > COORD_MAX) || (to.y < COORD_MIN) || (to.y > COORD_MAX)) {
             return std::pair("Case vide", false);
         }
         if(board[from.x][from.y].second.getPieceName()==PieceName::NONE) {

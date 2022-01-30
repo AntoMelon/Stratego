@@ -18,9 +18,17 @@
 #include <gf/Views.h>
 #include <gf/Text.h>
 
-
 #define OFFSET_X 0
 #define OFFSET_Y 150
+
+// dafont + possibilité de licence cc
+// TODO: selection de case cible avec relevé de bouton de souris (drag and drop)
+// TODO: ajouter sleep dans le serveur
+// TODO: virer les underscore
+// TODO: fromSize dans doc pour éviter {0, 0}
+// scene ?
+// ref -> git sokoban
+// TODO: retirer viewPort -> doc SFML
 
 /*
  * different stage of the game
@@ -43,8 +51,8 @@ auto threadPackets = [] (gf::TcpSocket &socket,gf::Queue<gf::Packet> &queue) {
 
 gf::Vector2i select_on_board(gf::Vector2i _selection) {
 
-    _selection.x = _selection.x / 64;
-    _selection.y = _selection.y / 64;
+    _selection.x = _selection.x / SPRITE_SIZE;
+    _selection.y = _selection.y / SPRITE_SIZE;
 
     if ((_selection.x < 0) || (_selection.x > 9) || (_selection.y < 0) || (_selection.x > 9)) return gf::Vector2i(-1, -1);
 
@@ -232,6 +240,7 @@ int main() {
             }
             views.processEvent(event);
         }
+
         /*
          * Take message from server and all the things linked
          */
@@ -326,12 +335,13 @@ int main() {
                 renderer.draw(S_waiting_screen);
                 renderer.draw(txt);
                 break;
+
             case PLAYING_STATE::PLACEMENT:
                 board.render(renderer, currentView);
                 renderer.draw(zone_to_place);
                 renderer.draw(txt);
                 if (selected != gf::Vector2i({-1,-1})) {
-                    S_selected_box.setPosition(gf::Vector2i({selected.x * 64, selected.y * 64}));
+                    S_selected_box.setPosition(gf::Vector2i({selected.x * SPRITE_SIZE, selected.y * SPRITE_SIZE}));
                     renderer.draw(S_selected_box);
                 }
                 viewport = renderer.getViewport(*currentView);
@@ -347,7 +357,7 @@ int main() {
                 board.render(renderer, currentView);
                 renderer.draw(txt);
                 if (selected != gf::Vector2i({-1,-1})) {
-                    S_selected_box.setPosition(gf::Vector2i({selected.x*64, selected.y*64}));
+                    S_selected_box.setPosition(gf::Vector2i({selected.x*SPRITE_SIZE, selected.y*SPRITE_SIZE}));
                     renderer.draw(S_selected_box);
                 }
                 viewport = renderer.getViewport(*currentView);

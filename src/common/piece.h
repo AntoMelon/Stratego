@@ -5,6 +5,8 @@
 #include <map>
 #include <gf/RenderWindow.h>
 
+#define COORD_MIN 0
+#define COORD_MAX 9
 
 namespace stg {
     enum PieceName {
