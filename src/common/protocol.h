@@ -19,6 +19,8 @@ using namespace gf::literals;
 
 namespace stg {
 
+    enum PLAYING_STATE {CONNEXION, PLACEMENT, IN_GAME, END};
+
     enum ResponseCode {
         WAITING,
         STARTING,

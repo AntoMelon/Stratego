@@ -108,6 +108,14 @@ namespace stg {
 
     }
 
+    std::string Board::getTexture(stg::PieceName name, stg::Color color) {
+
+        return pieceTextures[std::pair<stg::PieceName, stg::Color>(name, color)];
+
+    }
+
+
+
     void Board::setPieceFromColor(stg::Color _color) {
 
         int x = COORD_MIN, y = COORD_MIN;

@@ -2,6 +2,7 @@
 #define STGCLIENT_BOARD_H
 
 #include <vector>
+#include <string>
 #include "../../common/piece.h"
 #include <gf/RenderWindow.h>
 #include <gf/Vector.h>
@@ -44,6 +45,8 @@ namespace stg {
         Piece getPiece(int x, int y);
 
         std::vector<stg::Piece> getAllPiece();
+
+        std::string getTexture(stg::PieceName name, stg::Color color);
 
         // Set the piece at the given coordinates
         void setPiece(int x, int y, Piece piece);

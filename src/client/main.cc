@@ -18,23 +18,6 @@
 #include <gf/Views.h>
 #include <gf/Text.h>
 
-#define OFFSET_X 0
-#define OFFSET_Y 150
-
-// dafont + possibilité de licence cc
-// TODO: selection de case cible avec relevé de bouton de souris (drag and drop)
-// TODO: ajouter sleep dans le serveur
-// TODO: virer les underscore
-// TODO: fromSize dans doc pour éviter {0, 0}
-// scene ?
-// ref -> git sokoban
-// TODO: retirer viewPort -> doc SFML
-
-/*
- * different stage of the game
- */
-enum PLAYING_STATE {CONNEXION, PLACEMENT, IN_GAME, END};
-
 /*
  * Packet thread
  */
@@ -49,53 +32,43 @@ auto threadPackets = [] (gf::TcpSocket &socket,gf::Queue<gf::Packet> &queue) {
     }
 };
 
-gf::Vector2i select_on_board(gf::Vector2i _selection) {
+gf::Vector2i select_on_board(gf::Vector2i selection) {
 
-    _selection.x = _selection.x / SPRITE_SIZE;
-    _selection.y = _selection.y / SPRITE_SIZE;
+    selection = gf::Vector2i(selection.x / SPRITE_SIZE, selection.y / SPRITE_SIZE);
 
-    if ((_selection.x < 0) || (_selection.x > 9) || (_selection.y < 0) || (_selection.x > 9)) return gf::Vector2i(-1, -1);
+    if ((selection.x < COORD_MIN) || (selection.x > COORD_MAX) || (selection.y < COORD_MIN) || (selection.x > COORD_MAX)) return gf::Vector2i(-1, -1);
 
-    return _selection;
+    return selection;
 
 }
 
 /*
  * send the first message to the server
  */
-void sendFirstMessage(gf::TcpSocket &_socket) {
-    stg::ClientHello data;
-    data.name = "client";
+void sendFirstMessage(gf::TcpSocket &socket) {
+    stg::ClientHello data({"client"});
     gf::Packet data2;
     data2.is(data);
-    _socket.sendPacket(data2);
+    socket.sendPacket(data2);
 }
 
 /*
  * send first board to the server
  */
-void sendFirstBoard(std::vector<stg::Piece> _board, stg::Color _color, gf::TcpSocket &_socket) {
-    stg::ClientBoardSubmit firstBoard;
-    firstBoard.color = _color;
-    firstBoard.board = _board;
+void sendFirstBoard(std::vector<stg::Piece> board, stg::Color color, gf::TcpSocket &socket) {
+    stg::ClientBoardSubmit firstBoard({color, board});
     gf::Packet packet_board;
     packet_board.is(firstBoard);
-    _socket.sendPacket(packet_board);
-    std::cout << "Should send board" << std::endl;
+    socket.sendPacket(packet_board);
 }
 
 /*
  * send a try of move to the server
  */
-void sendMove(gf::Vector2i _from, gf::Vector2i _to, gf::TcpSocket &_socket) {
-    stg::ClientMoveRequest move;
-    move.from_x = _from.x;
-    move.from_y = _from.y;
-    move.to_x = _to.x;
-    move.to_y = _to.y;
-    gf::Packet packet_move;
-    packet_move.is(move);
-    _socket.sendPacket(packet_move);
+void sendMove(stg::ClientMoveRequest move, gf::TcpSocket &socket) {
+    gf::Packet to_send;
+    to_send.is(move);
+    socket.sendPacket(to_send);
 }
 
 /*
@@ -105,16 +78,16 @@ void sendMove(gf::Vector2i _from, gf::Vector2i _to, gf::TcpSocket &_socket) {
 int main() {
 
     gf::Queue<gf::Packet> serverPackets;
-    gf::TcpSocket socket_client = gf::TcpSocket(HOST, PORT);
+    gf::TcpSocket socket_client(HOST, PORT);
     if (!socket_client) {
         std::cerr << "Connection to server couldn't be established" << std::endl;
         return 1;
     }
 
     stg::Board board;
-    bool myTurn = false;
-    stg::Color myColor = stg::Color::BLUE;
-    PLAYING_STATE state = PLAYING_STATE::CONNEXION;
+    bool myTurn(false);
+    stg::Color myColor(stg::Color::BLUE);
+    PLAYING_STATE state(PLAYING_STATE::CONNEXION);
 
     std::thread packetsThread(threadPackets,std::ref(socket_client),std::ref(serverPackets));
     packetsThread.detach();
@@ -125,13 +98,15 @@ int main() {
     gf::Window window("Stratego online", ScreenSize);
     gf::RenderWindow renderer(window);
 
-    gf::RectF world = gf::RectF::fromPositionSize({ 0, 0 }, {640, 680}); //monde du jeu
-    gf::RectF extendedWorld = world.grow(100);
+    gf::RectF world = gf::RectF::fromSize({640, 680}); //monde du jeu
+    gf::RectF extendedWorld = gf::RectF::fromSize(ScreenSize);
 
+    gf::Texture T_drag;
     gf::Texture T_Uplay;
     gf::Texture T_waiting_screen("resources/waiting.png");
     gf::Texture T_starting_button("resources/play_button.png");
     gf::Texture T_cadre_selection(gf::Path("resources/selected_indicator.png"));
+
     gf::Sprite S_Uplay(T_Uplay);
     gf::Sprite S_waiting_screen(T_waiting_screen);
     gf::Sprite S_selected_box(T_cadre_selection);
@@ -144,15 +119,12 @@ int main() {
     views.addView(screenView);
     views.setInitialFramebufferSize(ScreenSize);
     gf::AdaptativeView *currentView = &fitView;
-    gf::RectF maxiViewport = gf::RectF::fromPositionSize({ 0.0f, 0.0f }, { 1.0f, 1.0f });
 
     gf::RectangleShape zone_to_place;
     gf::RectangleShape background(world);
     gf::RectangleShape extendedBackground(extendedWorld);
-    gf::RectangleShape frame(maxiViewport.getSize() * ScreenSize);
 
     background.setColor(gf::Color::Black);
-    frame.setColor(gf::Color::Transparent);
     extendedBackground.setColor(gf::Color::Gray());
 
     gf::Font font("resources/arial.ttf");
@@ -169,12 +141,11 @@ int main() {
     S_Uplay.setPosition({0, 100});
     zone_to_place.setPosition({2, 386});
     S_starting_button.setPosition({0, 0});
-    frame.setPosition(maxiViewport.getPosition() * ScreenSize);
 
     gf::Event event;
     gf::Packet communication;
-    gf::Vector2i selected = gf::Vector2i(-1,-1);
-    gf::Vector2i mouse_click = selected;
+    gf::Vector2i selected(-1,-1);
+    gf::Vector2i mouse_click(selected);
 
     /*
      * main loop
@@ -215,6 +186,7 @@ int main() {
                                         if ((selected != gf::Vector2i(-1, -1)) && (board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::NONE)) selected = gf::Vector2i(-1, -1); //if click on a cell with no piece
                                     } else { // if click on memory -> move piece on board
                                         board.movePiece(selected, select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView)));
+                                        txt.setString(board.getTexture(board.getPiece(selected.x, selected.y).getPieceName(), myColor));
                                         selected = gf::Vector2i(-1, -1);
                                     }
                                 }
@@ -225,7 +197,10 @@ int main() {
                                     selected = select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView));
                                     if ((selected != gf::Vector2i(-1, -1)) && (board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::NONE)) selected = gf::Vector2i(-1, -1); //if click on a cell with no piece
                                 } else { // send move to the server
-                                    sendMove(selected, select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView)), socket_client);
+                                    sendMove(
+                                            {selected.x, selected.y, select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView)).x, select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView)).y},
+                                            socket_client
+                                            );
                                     selected = gf::Vector2i(-1, -1);
                                 }
                                 break;
@@ -323,12 +298,9 @@ int main() {
          * display all element in the window
          */
         renderer.clear();
-        currentView->setViewport(maxiViewport);
         renderer.setView(*currentView);
         renderer.draw(extendedBackground);
         renderer.draw(background);
-
-        gf::RectI viewport;
 
         switch(state) {
             case PLAYING_STATE::CONNEXION:
@@ -344,11 +316,7 @@ int main() {
                     S_selected_box.setPosition(gf::Vector2i({selected.x * SPRITE_SIZE, selected.y * SPRITE_SIZE}));
                     renderer.draw(S_selected_box);
                 }
-                viewport = renderer.getViewport(*currentView);
-                frame.setPosition(viewport.getPosition());
-                frame.setSize(viewport.getSize());
                 renderer.setView(screenView);
-                renderer.draw(frame);
                 renderer.draw(S_starting_button);
                 renderer.draw(S_Uplay);
                 break;
@@ -360,11 +328,7 @@ int main() {
                     S_selected_box.setPosition(gf::Vector2i({selected.x*SPRITE_SIZE, selected.y*SPRITE_SIZE}));
                     renderer.draw(S_selected_box);
                 }
-                viewport = renderer.getViewport(*currentView);
-                frame.setPosition(viewport.getPosition());
-                frame.setSize(viewport.getSize());
                 renderer.setView(screenView);
-                renderer.draw(frame);
                 renderer.draw(S_Uplay);
                 break;
 
