@@ -87,7 +87,7 @@ int main() {
     stg::Board board;
     bool myTurn(false);
     stg::Color myColor(stg::Color::BLUE);
-    PLAYING_STATE state(PLAYING_STATE::CONNEXION);
+    stg::PLAYING_STATE state(stg::PLAYING_STATE::CONNEXION);
 
     std::thread packetsThread(threadPackets,std::ref(socket_client),std::ref(serverPackets));
     packetsThread.detach();
@@ -177,7 +177,7 @@ int main() {
                         mouse_click = event.mouseButton.coords;
                         switch (state) {
 
-                            case PLAYING_STATE::PLACEMENT:
+                            case stg::PLAYING_STATE::PLACEMENT:
                                 if ((mouse_click.x < 128) && (mouse_click.y < 26)) { // send the first board
                                     sendFirstBoard(board.getAllPiece(), myColor, socket_client);
                                 } else {
@@ -192,7 +192,7 @@ int main() {
                                 }
                                 break;
 
-                            case PLAYING_STATE::IN_GAME:
+                            case stg::PLAYING_STATE::IN_GAME:
                                 if (selected == gf::Vector2i(-1, -1)) { // if no click on memory -> put coords in memory
                                     selected = select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView));
                                     if ((selected != gf::Vector2i(-1, -1)) && (board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::NONE)) selected = gf::Vector2i(-1, -1); //if click on a cell with no piece
@@ -230,12 +230,12 @@ int main() {
 
                         case stg::ResponseCode::BOARD_OK:
                             txt.setString(com.message);
-                            state = PLAYING_STATE::IN_GAME;
+                            state = stg::PLAYING_STATE::IN_GAME;
                             break;
 
                         case stg::ResponseCode::BOARD_ERR:
                             txt.setString(com.message);
-                            state = PLAYING_STATE::PLACEMENT;
+                            state = stg::PLAYING_STATE::PLACEMENT;
                             break;
 
                         case stg::ResponseCode::MOVE_ERR:
@@ -243,14 +243,14 @@ int main() {
                             break;
 
                         case stg::ResponseCode::STARTING:
-                            if (state == PLAYING_STATE::CONNEXION) {
+                            if (state == stg::PLAYING_STATE::CONNEXION) {
                                 txt.setString(com.message);
-                                state = PLAYING_STATE::PLACEMENT;
+                                state = stg::PLAYING_STATE::PLACEMENT;
                             }
                             break;
 
                         case stg::ResponseCode::WAITING:
-                            if (state == PLAYING_STATE::CONNEXION) {
+                            if (state == stg::PLAYING_STATE::CONNEXION) {
                                 txt.setString(com.message);
                             }
                             break;
@@ -272,7 +272,7 @@ int main() {
 
                 case stg::ServerAssignColor::type: // assign a color to the client (only one time)
                 {
-                    if (state == PLAYING_STATE::CONNEXION) {
+                    if (state == stg::PLAYING_STATE::CONNEXION) {
                         stg::ServerAssignColor assign = communication.as<stg::ServerAssignColor>();
                         myColor = assign.color;
                         myTurn = assign.starting;
@@ -303,12 +303,12 @@ int main() {
         renderer.draw(background);
 
         switch(state) {
-            case PLAYING_STATE::CONNEXION:
+            case stg::PLAYING_STATE::CONNEXION:
                 renderer.draw(S_waiting_screen);
                 renderer.draw(txt);
                 break;
 
-            case PLAYING_STATE::PLACEMENT:
+            case stg::PLAYING_STATE::PLACEMENT:
                 board.render(renderer, currentView);
                 renderer.draw(zone_to_place);
                 renderer.draw(txt);
@@ -321,7 +321,7 @@ int main() {
                 renderer.draw(S_Uplay);
                 break;
 
-            case PLAYING_STATE::IN_GAME:
+            case stg::PLAYING_STATE::IN_GAME:
                 board.render(renderer, currentView);
                 renderer.draw(txt);
                 if (selected != gf::Vector2i({-1,-1})) {
@@ -332,7 +332,7 @@ int main() {
                 renderer.draw(S_Uplay);
                 break;
 
-            case PLAYING_STATE::END:
+            case stg::PLAYING_STATE::END:
             default:
                 break;
         }

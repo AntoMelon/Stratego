@@ -208,6 +208,7 @@ int main() {
     gf::TcpListener listener(PORT);
     gf::TcpSocket player1, player2;
     gf::Packet packet;
+    stg::PLAYING_STATE state = stg::PLAYING_STATE::CONNEXION;
 
     bool inGame = false;
 
@@ -322,6 +323,35 @@ int main() {
 
         if (packetsFromP2.poll(clientPacket) && turn == 1) {
             dealWithRequest(player2,player1,clientPacket,board, p1Color == 0 ? stg::Color::BLUE : stg::Color::RED);
+        }
+
+    }
+
+    /*
+     * boucle automate
+     */
+
+    gf::Packet clientPacket;
+
+    while (inGame) {
+
+        if (packetsFromP1.poll(clientPacket) || packetsFromP2.poll(clientPacket) ) {
+            switch (state) {
+                case stg::PLAYING_STATE::CONNEXION:
+                    //TODO: message attendu lors de la connexion (switch avec chaque message possible du client, exception comprise)
+                    break;
+                case stg::PLAYING_STATE::PLACEMENT:
+                    //TODO: message attendu lors de le placement
+                    break;
+                case stg::PLAYING_STATE::IN_GAME:
+                    //TODO: message attendu lors du jeu
+                    break;
+                case stg::PLAYING_STATE::END:
+                    //TODO:: message attendu (si besoin) en fin
+                    break;
+                default:
+                    break;
+            }
         }
 
     }
