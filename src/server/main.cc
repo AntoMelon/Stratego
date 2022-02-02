@@ -1,7 +1,7 @@
 #include <iostream>
 #include <random>
 #include <thread>
-
+#include <chrono>
 
 #include <map>
 
@@ -13,6 +13,7 @@
 #include "../common/protocol.h"
 #include "./server_board.h"
 
+using namespace std::chrono_literals;
 
 //thread de gestion des packets
 auto threadPackets = [] (gf::TcpSocket &socket,gf::Queue<gf::Packet> &queue) {
@@ -81,16 +82,12 @@ bool isSubmittedBoardOk(std::vector<stg::Piece> &board) {
  * @param gf::Packet &packet : packet sent
  * @param stg::ServerBoard &board : board of the game
  */
-void dealWithRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet &packet, stg::ServerBoard &board, stg::Color sender_color) {
+bool dealWithMoveRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet &packet, stg::ServerBoard &board, stg::Color sender_color) {
 
     gf::Packet to_send;
     std::cout<<"Reçu"<< std::endl;
 
-    switch (packet.getType()) {
-
-        //move request
-        case stg::ClientMoveRequest::type:
-        {
+    if (packet.getType() == stg::ClientMoveRequest::type) {
             stg::ClientMoveRequest request = packet.as<stg::ClientMoveRequest>();
 
             if (!board.isMoveAllowed(request.from_x,request.from_y,request.to_x,request.to_y)) {
@@ -100,7 +97,7 @@ void dealWithRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet &pa
 
                 to_send.is(response);
                 sender.sendPacket(to_send);
-                return;
+                return true;
             }
 
             stg::ServerMoveNotif result;
@@ -168,12 +165,11 @@ void dealWithRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet &pa
 
             to_send.is(result);
             other.sendPacket(to_send);
-            break;
-        }
 
-        default:
-        break;
+        return stillRedFlag && stillBlueFlag;
     }
+
+    return true;
 }
 
 bool dealWithRequestIfInitialBoard(gf::TcpSocket& sender, gf::Packet& packet, stg::ServerBoard& board) {
@@ -216,10 +212,8 @@ int main() {
         gf::TcpSocket client = listener.accept();
         if (!player1) {
             player1 = std::move(client);
-            player1.setNonBlocking();
         } else {
             player2 = std::move(client);
-            player2.setNonBlocking();
         }
 
         if(player1 && !player2) {
@@ -244,6 +238,8 @@ int main() {
             std::cout << "Hello " << hello.name << std::endl;
 
             inGame = true;
+
+            state = stg::PLAYING_STATE::PLACEMENT;
 
         }
     }
@@ -295,64 +291,72 @@ int main() {
     bool board1Received = false;
     bool board2Received = false;
 
-    while (!board1Received || !board2Received) {
-
-        gf::Packet boardSubmission;
-
-        if (packetsFromP1.poll(boardSubmission)) {
-            board1Received = dealWithRequestIfInitialBoard(player1,boardSubmission,board);
-            std::cout << "Board 1 valid: " << board1Received << std::endl;
-        }
-
-        if (packetsFromP2.poll(boardSubmission)) {
-            board2Received = dealWithRequestIfInitialBoard(player2,boardSubmission,board);
-            std::cout << "Board 2 valid: " << board2Received << std::endl;
-        }
-    
-    }
-
-    std::cout << "Both boards were validated" << std::endl;
-
-    while (inGame) {
-
-        gf::Packet clientPacket;
-
-        if (packetsFromP1.poll(clientPacket) && turn == 0) {
-            dealWithRequest(player1,player2,clientPacket,board, p1Color == 0 ? stg::Color::RED : stg::Color::BLUE);
-        }
-
-        if (packetsFromP2.poll(clientPacket) && turn == 1) {
-            dealWithRequest(player2,player1,clientPacket,board, p1Color == 0 ? stg::Color::BLUE : stg::Color::RED);
-        }
-
-    }
-
     /*
      * boucle automate
      */
 
     gf::Packet clientPacket;
 
-    while (inGame) {
+    bool bothFlags = false;
 
-        if (packetsFromP1.poll(clientPacket) || packetsFromP2.poll(clientPacket) ) {
+    while (inGame) {
+        if (packetsFromP1.poll(clientPacket)) {
             switch (state) {
-                case stg::PLAYING_STATE::CONNEXION:
-                    //TODO: message attendu lors de la connexion (switch avec chaque message possible du client, exception comprise)
-                    break;
                 case stg::PLAYING_STATE::PLACEMENT:
-                    //TODO: message attendu lors de le placement
-                    break;
+                board1Received = dealWithRequestIfInitialBoard(player1,clientPacket,board);
+                std::cout << "Board 1 valid: " << board1Received << std::endl;
+                break;
+
                 case stg::PLAYING_STATE::IN_GAME:
-                    //TODO: message attendu lors du jeu
-                    break;
-                case stg::PLAYING_STATE::END:
-                    //TODO:: message attendu (si besoin) en fin
-                    break;
+                {
+                    gf::Packet clientPacket;
+
+                    if (turn == 0) {
+                        bothFlags = dealWithMoveRequest(player1,player2,clientPacket,board, p1Color == 0 ? stg::Color::RED : stg::Color::BLUE);
+                    }
+                }
+                break;
+
                 default:
-                    break;
+                break;
             }
         }
+
+        if (packetsFromP2.poll(clientPacket)) {
+            switch (state) {
+                case stg::PLAYING_STATE::PLACEMENT:
+                board2Received = dealWithRequestIfInitialBoard(player2,clientPacket,board);
+                std::cout << "Board 2 valid: " << board2Received << std::endl;
+                break;
+
+                case stg::PLAYING_STATE::IN_GAME:
+                {
+                    gf::Packet clientPacket;
+
+                    if (turn == 1) {
+                        bothFlags = dealWithMoveRequest(player2,player1,clientPacket,board, p1Color == 0 ? stg::Color::BLUE : stg::Color::RED);
+                    }
+                }
+                break;
+
+                default:
+                    break;
+            } 
+        }
+
+
+        if (board1Received && board2Received) {
+            std::cout << "Both boards were validated" << std::endl;
+            state = stg::PLAYING_STATE::IN_GAME;
+        }
+
+        if (!bothFlags) {
+            std::cout << "One flag has been taken. Ending game..." << std::endl;
+            state = stg::PLAYING_STATE::END;
+            inGame = false;
+        }
+
+        std::this_thread::sleep_for(16ms);
 
     }
 
