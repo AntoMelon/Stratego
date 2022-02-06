@@ -102,6 +102,7 @@ std::pair<bool,bool> dealWithMoveRequest(gf::TcpSocket &sender, gf::TcpSocket &o
     std::cout<<"Reçu"<< std::endl;
 
     if (packet.getType() == stg::ClientMoveRequest::type) {
+
             stg::ClientMoveRequest request = packet.as<stg::ClientMoveRequest>();
 
             stg::Color sender_color = request.color;
