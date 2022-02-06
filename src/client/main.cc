@@ -197,10 +197,12 @@ int main() {
                             case stg::PLAYING_STATE::IN_GAME:
                                 if (selected == gf::Vector2i(-1, -1)) { // if no click on memory -> put coords in memory
                                     selected = select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView));
-                                    if ((selected != gf::Vector2i(-1, -1)) && (board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::NONE)) selected = gf::Vector2i(-1, -1); //if click on a cell with no piece
+                                    if ((selected != gf::Vector2i(-1, -1)) && (board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::NONE))
+                                        selected = gf::Vector2i(-1, -1); //if click on a cell with no piece
                                 } else { // send move to the server
                                     sendMove(
-                                            {selected.x, selected.y, select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView)).x, select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView)).y, myColor},
+                                            {selected.x, selected.y, select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView)).x,
+                                             select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView)).y, myColor},
                                             socket_client
                                             );
                                     selected = gf::Vector2i(-1, -1);

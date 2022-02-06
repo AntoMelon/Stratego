@@ -104,6 +104,7 @@ bool dealWithMoveRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet
     std::cout<<"Reçu"<< std::endl;
 
     if (packet.getType() == stg::ClientMoveRequest::type) {
+
             stg::ClientMoveRequest request = packet.as<stg::ClientMoveRequest>();
 
             stg::Color sender_color = request.color;
@@ -203,7 +204,8 @@ bool dealWithMoveRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet
             to_send.is(result);
             other.sendPacket(to_send);
 
-        return stillRedFlag && stillBlueFlag;
+            std::cout << "mouvement envoyé!" << std::endl;
+            return stillRedFlag && stillBlueFlag;
     }
 
     return true;
