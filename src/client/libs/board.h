@@ -52,7 +52,10 @@ namespace stg {
         void setPiece(int x, int y, Piece piece);
 
         //Set the piece at the initial coordinates from a given color
-        void setPieceFromColor(stg::Color _color);
+        void setPieceFromColor(stg::Color color);
+
+        //Finish to set the starting board after board has been send
+        void setOtherSide(stg::Color color);
 
         //Render the board
         void render(gf::RenderWindow &renderer, gf::AdaptativeView* view);

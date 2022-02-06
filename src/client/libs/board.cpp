@@ -116,53 +116,63 @@ namespace stg {
 
 
 
-    void Board::setPieceFromColor(stg::Color _color) {
+    void Board::setPieceFromColor(stg::Color color) {
 
         int x = COORD_MIN, y = COORD_MIN;
         while (x < 8) {
-            setPiece(x,y,stg::Piece(stg::PieceName::ECLAIREUR,_color));
+            setPiece(x,y,stg::Piece(stg::PieceName::ECLAIREUR,color));
             ++x;
         }
         while (x < 10) {
-            setPiece(x,y,stg::Piece(stg::PieceName::COLONEL,_color));
+            setPiece(x,y,stg::Piece(stg::PieceName::COLONEL,color));
             ++x;
         }
         x = 0;
         ++y;
         while (x < 6) {
-            setPiece(x,y,stg::Piece(stg::PieceName::BOMBE,_color));
+            setPiece(x,y,stg::Piece(stg::PieceName::BOMBE,color));
             ++x;
         }
         while (x < 10) {
-            setPiece(x,y,stg::Piece(stg::PieceName::SERGENT,_color));
+            setPiece(x,y,stg::Piece(stg::PieceName::SERGENT,color));
             ++x;
         }
         x = 0;
         ++y;
         while (x < 5) {
-            setPiece(x,y,stg::Piece(stg::PieceName::DEMINEUR,_color));
+            setPiece(x,y,stg::Piece(stg::PieceName::DEMINEUR,color));
             ++x;
         }
         while (x < 9) {
-            setPiece(x,y,stg::Piece(stg::PieceName::LIEUTENANT,_color));
+            setPiece(x,y,stg::Piece(stg::PieceName::LIEUTENANT,color));
             ++x;
         }
-        setPiece(x,y,stg::Piece(stg::PieceName::MARECHAL,_color));
+        setPiece(x,y,stg::Piece(stg::PieceName::MARECHAL,color));
         x = 0;
         ++y;
         while (x < 4) {
-            setPiece(x,y,stg::Piece(stg::PieceName::CAPITAINE,_color));
+            setPiece(x,y,stg::Piece(stg::PieceName::CAPITAINE,color));
             ++x;
         }
         while (x < 7) {
-            setPiece(x,y,stg::Piece(stg::PieceName::COMMANDANT,_color));
+            setPiece(x,y,stg::Piece(stg::PieceName::COMMANDANT,color));
             ++x;
         }
-        setPiece(x,y,stg::Piece(stg::PieceName::GENERAL,_color));
+        setPiece(x,y,stg::Piece(stg::PieceName::GENERAL,color));
         ++x;
-        setPiece(x,y,stg::Piece(stg::PieceName::ESPION,_color));
+        setPiece(x,y,stg::Piece(stg::PieceName::ESPION,color));
         ++x;
-        setPiece(x,y,stg::Piece(stg::PieceName::DRAPEAU,_color));
+        setPiece(x,y,stg::Piece(stg::PieceName::DRAPEAU,color));
+
+    }
+
+    void Board::setOtherSide(stg::Color color) {
+
+        for (int y = COORD_MIN; y < 4; ++y) {
+            for (int x = COORD_MIN; x <= COORD_MAX; ++x) {
+                setPiece(x, y, stg::Piece(stg::PieceName::PION, color));
+            }
+        }
 
     }
 

@@ -230,6 +230,11 @@ int main() {
 
                         case stg::ResponseCode::BOARD_OK:
                             txt.setString(com.message);
+                            if (myColor == stg::Color::BLUE) {
+                                board.setOtherSide(stg::Color::RED);
+                            } else {
+                                board.setOtherSide(stg::Color::BLUE);
+                            }
                             state = stg::PLAYING_STATE::IN_GAME;
                             break;
 
