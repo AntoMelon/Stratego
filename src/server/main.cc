@@ -194,7 +194,7 @@ bool dealWithRequestIfInitialBoard(gf::TcpSocket& sender, gf::Packet& packet, st
         std::cout << "Imported" << std::endl;
     } else {
         response.code = stg::ResponseCode::BOARD_ERR;
-        response.message = "Plateau validé.";
+        response.message = "Plateau non-valide.";
     }
 
     to_send.is(response);
