@@ -166,11 +166,6 @@ std::pair<bool,bool> dealWithMoveRequest(gf::TcpSocket &sender, gf::TcpSocket &o
             bool stillBlueFlag = board.stillHasFlag(stg::Color::BLUE);
 
             if (sender_color == stg::Color::RED) {
-                result.from_x = request.from_x;
-                result.from_y = request.from_y;
-                result.to_x = request.to_x;
-                result.to_y = request.to_y;
-
                 result.win = !stillBlueFlag;
                 result.lose = !stillRedFlag;
             } else {
@@ -182,18 +177,18 @@ std::pair<bool,bool> dealWithMoveRequest(gf::TcpSocket &sender, gf::TcpSocket &o
             sender.sendPacket(to_send);
 
             if (sender_color == stg::Color::RED) {
-                result.from_x = S_from.first;
-                result.from_y = S_from.second;
-                result.to_x = S_to.first;
-                result.to_y = S_to.second;
+                result.from_x = S_from.second;
+                result.from_y = S_from.first;
+                result.to_x = S_to.second;
+                result.to_y = S_to.first;
 
                 result.win = !stillRedFlag;
                 result.lose = !stillBlueFlag;
             } else {
-                result.from_x = request.from_x;
-                result.from_y = request.from_y;
-                result.to_x = request.to_x;
-                result.to_y = request.to_y;
+                result.from_x = COORD_MAX - S_from.second;
+                result.from_y = COORD_MAX - S_from.first;
+                result.to_x = COORD_MAX - S_to.second;
+                result.to_y = COORD_MAX - S_to.first;
 
                 result.win = !stillBlueFlag;
                 result.lose = !stillRedFlag;
