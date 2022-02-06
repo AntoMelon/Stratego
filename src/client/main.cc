@@ -38,6 +38,8 @@ gf::Vector2i select_on_board(gf::Vector2i selection) {
 
     if ((selection.x < COORD_MIN) || (selection.x > COORD_MAX) || (selection.y < COORD_MIN) || (selection.x > COORD_MAX)) return gf::Vector2i(-1, -1);
 
+    if (((selection.y == 4) || (selection.y == 5)) && ((selection.x == 2) || (selection.x == 3) || (selection.x == 6) || (selection.x == 7))) return gf::Vector2i(-1, -1);
+
     return selection;
 
 }
@@ -276,6 +278,7 @@ int main() {
                 case stg::ServerMoveNotif::type: // if a client do a move
                 {
                     stg::ServerMoveNotif com = communication.as<stg::ServerMoveNotif>();
+                    std::cout << "Base: " << com.from_x << ";" << com.from_y << std::endl << "Cible: " << com.to_x << ";" << com.to_y << std::endl;
                     if (board.getPiece(com.to_x, com.to_y).getPieceName() != stg::PieceName::NONE){
                         board.movePiece(gf::Vector2i({com.from_x, com.from_y}), gf::Vector2i({com.to_x, com.to_y}));
                     } else {
