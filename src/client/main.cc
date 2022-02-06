@@ -270,7 +270,17 @@ int main() {
                 case stg::ServerMoveNotif::type: // if a client do a move
                 {
                     stg::ServerMoveNotif com = communication.as<stg::ServerMoveNotif>();
-                    board.movePiece(gf::Vector2i({com.from_x, com.from_y}), gf::Vector2i({com.to_x, com.to_y}));
+                    if (board.getPiece(com.to_x, com.to_y).getPieceName() != stg::PieceName::NONE){
+                        board.movePiece(gf::Vector2i({com.from_x, com.from_y}), gf::Vector2i({com.to_x, com.to_y}));
+                    } else {
+                        if (com.atk_alive) {
+                            //TODO:Effacer piece sur cible
+                            board.movePiece(gf::Vector2i({com.from_x, com.from_y}), gf::Vector2i({com.to_x, com.to_y}));
+                        }
+                        if (com.def_alive) {
+                            //TODO:Effacer attaquant
+                        }
+                    }
                     myTurn = !myTurn;
                     break;
                 }
