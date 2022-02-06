@@ -34,7 +34,11 @@ namespace stg {
 
         std::cout << "Piece at (" << from_x <<"," << from_y << ") is a " << to_move.getPieceName() << std::endl;
 
-        if (to_move.getPieceName() == stg::PieceName::NONE || to_move.getPieceName() == stg::PieceName::LAKE || to_move.getPieceName() == stg::PieceName::DRAPEAU || to_move.getPieceName() == stg::PieceName::BOMBE) {
+        if (to_move.getPieceName() == stg::PieceName::NONE 
+        || to_move.getPieceName() == stg::PieceName::LAKE 
+        || to_move.getPieceName() == stg::PieceName::DRAPEAU 
+        || to_move.getPieceName() == stg::PieceName::BOMBE
+        || to_move.getColor() != color) {
             return false;
         }
 
