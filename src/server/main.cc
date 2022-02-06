@@ -77,16 +77,14 @@ bool isSubmittedBoardOk(std::vector<stg::Piece> &board) {
 
 
 std::pair<int,int> coordinatesConversion(std::pair<int,int> coords, stg::Color color) {
-    std::pair<int,int> res = {coords.first,coords.second};
+    std::pair<int,int> res = {coords.second,coords.first};
 
     if (color == stg::Color::RED) {
         res.first = COORD_MAX - res.first;
         res.second = COORD_MAX - res.second;
+    } 
 
-        std::cout << "Converted to (" << res.first << "," << res.second << ")" << std::endl;
-    } else {
-        std::cout << "Not converted" << std::endl;
-    }
+    std::cout << "Converted to (" << res.first << "," << res.second << ")" << std::endl;
 
     return res;
 }
@@ -98,7 +96,7 @@ std::pair<int,int> coordinatesConversion(std::pair<int,int> coords, stg::Color c
  * @param gf::Packet &packet : packet sent
  * @param stg::ServerBoard &board : board of the game
  */
-bool dealWithMoveRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet &packet, stg::ServerBoard &board) {
+std::pair<bool,bool> dealWithMoveRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet &packet, stg::ServerBoard &board) {
 
     gf::Packet to_send;
     std::cout<<"Reçu"<< std::endl;
@@ -119,7 +117,7 @@ bool dealWithMoveRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet
 
                 to_send.is(response);
                 sender.sendPacket(to_send);
-                return true;
+                return {false,true};
             }
 
             stg::ServerMoveNotif result;
@@ -167,10 +165,10 @@ bool dealWithMoveRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet
             bool stillBlueFlag = board.stillHasFlag(stg::Color::BLUE);
 
             if (sender_color == stg::Color::RED) {
-                result.from_x = S_from.first;
-                result.from_y = S_from.second;
-                result.to_x = S_to.first;
-                result.to_y = S_to.second;
+                result.from_x = request.from_x;
+                result.from_y = request.from_y;
+                result.to_x = request.to_x;
+                result.to_y = request.to_y;
 
                 result.win = !stillBlueFlag;
                 result.lose = !stillRedFlag;
@@ -183,18 +181,18 @@ bool dealWithMoveRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet
             sender.sendPacket(to_send);
 
             if (sender_color == stg::Color::RED) {
-                result.from_x = request.from_x;
-                result.from_y = request.from_y;
-                result.to_x = request.to_x;
-                result.to_y = request.to_y;
-
-                result.win = !stillRedFlag;
-                result.lose = !stillBlueFlag;
-            } else {
                 result.from_x = S_from.first;
                 result.from_y = S_from.second;
                 result.to_x = S_to.first;
                 result.to_y = S_to.second;
+
+                result.win = !stillRedFlag;
+                result.lose = !stillBlueFlag;
+            } else {
+                result.from_x = request.from_x;
+                result.from_y = request.from_y;
+                result.to_x = request.to_x;
+                result.to_y = request.to_y;
 
                 result.win = !stillBlueFlag;
                 result.lose = !stillRedFlag;
@@ -203,10 +201,12 @@ bool dealWithMoveRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet
             to_send.is(result);
             other.sendPacket(to_send);
 
-        return stillRedFlag && stillBlueFlag;
+            board.debugPrint();
+
+        return {true, stillRedFlag && stillBlueFlag};
     }
 
-    return true;
+    return {false,true};
 }
 
 bool dealWithRequestIfInitialBoard(gf::TcpSocket& sender, gf::Packet& packet, stg::ServerBoard& board) {
@@ -347,7 +347,12 @@ int main() {
                 case stg::PLAYING_STATE::IN_GAME:
                 {
                     if (turn == 0) {
-                        bothFlags = dealWithMoveRequest(player1,player2,clientPacket,board);
+                        std::pair<bool,bool> moveResult = dealWithMoveRequest(player1,player2,clientPacket,board);
+                        bothFlags = moveResult.second;
+
+                        if (moveResult.first) {
+                            turn = 1 - turn;
+                        }
                     } else {
                         gf::Packet wrongTurn;
                         stg::ServerMessage wrT;
@@ -376,7 +381,12 @@ int main() {
                 case stg::PLAYING_STATE::IN_GAME:
                 {
                     if (turn == 1) {
-                        bothFlags = dealWithMoveRequest(player2,player1,clientPacket,board);
+                        std::pair<bool,bool> moveResult = dealWithMoveRequest(player2,player1,clientPacket,board);
+                        bothFlags = moveResult.second;
+                        if (moveResult.first) {
+                            turn = 1 - turn;
+                        }
+
                     } else {
                         gf::Packet wrongTurn;
                         stg::ServerMessage wrT;

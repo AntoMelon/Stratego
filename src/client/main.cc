@@ -195,6 +195,7 @@ int main() {
                                 break;
 
                             case stg::PLAYING_STATE::IN_GAME:
+                                std::cout << "Selected: (" << selected.x << "," << selected.y << ")" << std::endl;
                                 if (selected == gf::Vector2i(-1, -1)) { // if no click on memory -> put coords in memory
                                     selected = select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView));
                                     if ((selected != gf::Vector2i(-1, -1)) && (board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::NONE)) selected = gf::Vector2i(-1, -1); //if click on a cell with no piece

@@ -12,6 +12,15 @@ namespace stg {
         }
 
         setPiece(4,2,{stg::PieceName::LAKE,stg::Color::EMPTY});
+        setPiece(4,3,{stg::PieceName::LAKE,stg::Color::EMPTY});
+        setPiece(5,2,{stg::PieceName::LAKE,stg::Color::EMPTY});
+        setPiece(5,3,{stg::PieceName::LAKE,stg::Color::EMPTY});
+
+        setPiece(4,6,{stg::PieceName::LAKE,stg::Color::EMPTY});
+        setPiece(4,7,{stg::PieceName::LAKE,stg::Color::EMPTY});
+        setPiece(5,6,{stg::PieceName::LAKE,stg::Color::EMPTY});
+        setPiece(5,7,{stg::PieceName::LAKE,stg::Color::EMPTY});
+
     }
 
     bool ServerBoard::isMoveAllowed(int from_x,int from_y, int to_x, int to_y, stg::Color color) const {
@@ -23,7 +32,7 @@ namespace stg {
 
         stg::Piece to_move = getPiece(from_x,from_y);
 
-        std::cout << "Piece is a " << to_move.getPieceName() << std::endl;
+        std::cout << "Piece at (" << from_x <<"," << from_y << ") is a " << to_move.getPieceName() << std::endl;
 
         if (to_move.getPieceName() == stg::PieceName::NONE || to_move.getPieceName() == stg::PieceName::LAKE || to_move.getPieceName() == stg::PieceName::DRAPEAU || to_move.getPieceName() == stg::PieceName::BOMBE) {
             return false;
