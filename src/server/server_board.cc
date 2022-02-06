@@ -39,11 +39,13 @@ namespace stg {
         || to_move.getPieceName() == stg::PieceName::DRAPEAU 
         || to_move.getPieceName() == stg::PieceName::BOMBE
         || to_move.getColor() != color) {
+            std::cout << "pas de pièce" << std::endl;
             return false;
         }
 
         stg::Piece target = getPiece(to_x,to_y);
         if (target.getColor() == color || target.getPieceName() == stg::PieceName::LAKE) {
+            std::cout << "case indisponible" << std::endl;
             return false;
         }
 
@@ -52,6 +54,7 @@ namespace stg {
 
                 for (int i = std::min(from_y,to_y)+1; i < std::max(from_y,to_y); ++i) {
                     if (getPiece(from_x,i).getPieceName() != stg::PieceName::NONE) {
+                        std::cout << "pas aligné" << std::endl;
                         return false;
                     }
                 }
