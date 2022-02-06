@@ -65,6 +65,8 @@ namespace stg {
 
         void toString();
 
+        void swapPiece(gf::Vector2i first, gf::Vector2i other);
+
     private:
         std::vector<std::vector<std::pair<Square,stg::Piece>>> board;
         std::map<std::pair<stg::PieceName, stg::Color>, std::string> pieceTextures;

@@ -27,7 +27,8 @@ namespace stg {
         BOARD_OK,
         BOARD_ERR,
         MOVE_ERR,
-        NOT_YOUR_TURN
+        NOT_YOUR_TURN,
+        INFO
     };
 
 

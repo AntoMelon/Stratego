@@ -253,4 +253,14 @@ namespace stg {
         }
     }
 
+    void Board::swapPiece(gf::Vector2i first, gf::Vector2i other) {
+        if (board[first.x][first.y].second.getPieceName() == stg::PieceName::NONE) return;
+        if (board[other.x][other.y].second.getPieceName() == stg::PieceName::NONE) return;
+        stg::Piece firstPiece = stg::Piece(board[first.x][first.y].second.getPieceName(), board[first.x][first.y].second.getColor());
+        stg::Piece otherPiece = stg::Piece(board[other.x][other.y].second.getPieceName(), board[other.x][other.y].second.getColor());
+        setPiece(other.x, other.y, firstPiece);
+        setPiece(first.x, first.y, otherPiece);
+        return;
+    }
+
 }

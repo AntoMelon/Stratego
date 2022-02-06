@@ -217,7 +217,7 @@ bool dealWithRequestIfInitialBoard(gf::TcpSocket& sender, gf::Packet& packet, st
             
     if (boardOk) {
         response.code = stg::ResponseCode::BOARD_OK;
-        response.message = "Plateau validé.";
+        response.message = "Plateau validé. En attente de l'adversaire...";
 
         std::cout << "Tries to import" << std::endl;
         board.importSubmittedBoard(submit.color,submit.board);
@@ -231,6 +231,17 @@ bool dealWithRequestIfInitialBoard(gf::TcpSocket& sender, gf::Packet& packet, st
     sender.sendPacket(to_send);
 
     return boardOk;
+}
+
+void sendInfoMessage(gf::TcpSocket& dest, std::string message) {
+    gf::Packet to_send;
+
+    stg::ServerMessage turn;
+    turn.code = stg::ResponseCode::INFO;
+    turn.message = message;
+
+    to_send.is(turn);
+    dest.sendPacket(to_send);
 }
 
 int main() {
@@ -349,12 +360,14 @@ int main() {
 
                         if (moveResult.first) {
                             turn = 1 - turn;
+                            sendInfoMessage(player2, "Votre tour");
+                            sendInfoMessage(player1, "Votre adversaire joue");
                         }
                     } else {
                         gf::Packet wrongTurn;
                         stg::ServerMessage wrT;
                         wrT.code = stg::ResponseCode::NOT_YOUR_TURN;
-                        wrT.message = "It is not your turn to play.";
+                        wrT.message = "Ce n'est pas à vous de jouer !";
 
                         wrongTurn.is(wrT);
 
@@ -382,13 +395,15 @@ int main() {
                         bothFlags = moveResult.second;
                         if (moveResult.first) {
                             turn = 1 - turn;
+                            sendInfoMessage(player1, "Votre tour");
+                            sendInfoMessage(player2, "Votre adversaire joue");
                         }
 
                     } else {
                         gf::Packet wrongTurn;
                         stg::ServerMessage wrT;
                         wrT.code = stg::ResponseCode::NOT_YOUR_TURN;
-                        wrT.message = "It is not your turn to play.";
+                        wrT.message = "Ce n'est pas à votre tour de jouer !";
 
                         wrongTurn.is(wrT);
 
@@ -406,10 +421,14 @@ int main() {
         if (board1Received && board2Received && state == stg::PLAYING_STATE::PLACEMENT) {
             std::cout << "Both boards were validated" << std::endl;
             state = stg::PLAYING_STATE::IN_GAME;
+            auto& firstPlayer = turn == 0 ? player1 : player2;
+            auto& secondPlayer = turn == 0 ? player2 : player1;
+            sendInfoMessage(firstPlayer,"Début de la partie. Vous commencez.");
+            sendInfoMessage(secondPlayer,"Début de la partie. Votre adversaire commence.");
         }
 
         if (!bothFlags && state == stg::PLAYING_STATE::IN_GAME) {
-            std::cout << "One flag has been taken. Ending game..." << std::endl;
+            std::cout << "Un drapeau a été capturé. Fin de la partie..." << std::endl;
             state = stg::PLAYING_STATE::END;
             inGame = false;
         }

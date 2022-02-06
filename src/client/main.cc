@@ -185,8 +185,14 @@ int main() {
                                         selected = select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView));
                                         if ((selected != gf::Vector2i(-1, -1)) && (board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::NONE)) selected = gf::Vector2i(-1, -1); //if click on a cell with no piece
                                     } else { // if click on memory -> move piece on board
-                                        board.movePiece(selected, select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView)));
-                                        selected = gf::Vector2i(-1, -1);
+                                        auto click_coord = select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView));
+                                        if(board.getPiece(click_coord.x, click_coord.y).getPieceName() != stg::PieceName::NONE) { // if click on a cell with a piece, then swap piece
+                                            board.swapPiece(selected, click_coord);
+                                            selected = gf::Vector2i(-1, -1);
+                                        } else { // if click on a cell with no piece, then move piece
+                                            board.movePiece(selected, click_coord);
+                                            selected = gf::Vector2i(-1, -1);
+                                        }
                                     }
                                 }
                                 break;
@@ -269,6 +275,10 @@ int main() {
                                 txt.setString(com.message);
                             }
                         break;
+
+                        case stg::ResponseCode::INFO:
+                            txt.setString(com.message);
+                            break;
 
                         default:
                             txt.setString("Information reçue non-reconnue ou non-permise en jeu.");
