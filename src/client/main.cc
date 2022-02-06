@@ -274,11 +274,11 @@ int main() {
                         board.movePiece(gf::Vector2i({com.from_x, com.from_y}), gf::Vector2i({com.to_x, com.to_y}));
                     } else {
                         if (com.atk_alive) {
-                            //TODO:Effacer piece sur cible
+                            board.unsetPiece({com.to_x, com.to_y});
                             board.movePiece(gf::Vector2i({com.from_x, com.from_y}), gf::Vector2i({com.to_x, com.to_y}));
                         }
                         if (com.def_alive) {
-                            //TODO:Effacer attaquant
+                            board.unsetPiece({com.from_x, com.from_y});
                         }
                     }
                     myTurn = !myTurn;

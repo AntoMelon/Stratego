@@ -86,6 +86,10 @@ namespace stg {
         board[x][y].second = piece;
     }
 
+    void Board::unsetPiece(gf::Vector2i coords) {
+        board[coords.x][coords.y].second.makeBlankPiece();
+    }
+
     Piece Board::getPiece(int x, int y) {
         return board[x][y].second;
     }
