@@ -26,7 +26,8 @@ namespace stg {
         STARTING,
         BOARD_OK,
         BOARD_ERR,
-        MOVE_ERR
+        MOVE_ERR,
+        NOT_YOUR_TURN
     };
 
 
@@ -48,11 +49,12 @@ namespace stg {
         int from_y;
         int to_x;
         int to_y;
+        stg::Color color;
     };
 
     template<typename Archive>
     Archive operator|(Archive& ar, ClientMoveRequest& move) {
-        return ar | move.from_x | move.from_y | move.to_x | move.to_y;
+        return ar | move.from_x | move.from_y | move.to_x | move.to_y | move.color;
     }
 
     struct ClientBoardSubmit {

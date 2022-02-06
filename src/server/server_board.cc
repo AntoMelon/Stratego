@@ -1,7 +1,7 @@
 #include "server_board.h"
 #include "../client/libs/board.h"
 
-
+#include <iostream>
 #include <cmath>
 
 namespace stg {
@@ -20,6 +20,8 @@ namespace stg {
         }
 
         stg::Piece to_move = getPiece(from_x,from_y);
+
+        std::cout << "Piece is a " << to_move.getPieceName() << std::endl;
 
         if (to_move.getPieceName() == stg::PieceName::NONE || to_move.getPieceName() == stg::PieceName::LAKE || to_move.getPieceName() == stg::PieceName::DRAPEAU || to_move.getPieceName() == stg::PieceName::BOMBE) {
             return false;

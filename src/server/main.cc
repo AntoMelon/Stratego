@@ -82,13 +82,17 @@ bool isSubmittedBoardOk(std::vector<stg::Piece> &board) {
  * @param gf::Packet &packet : packet sent
  * @param stg::ServerBoard &board : board of the game
  */
-bool dealWithMoveRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet &packet, stg::ServerBoard &board, stg::Color sender_color) {
+bool dealWithMoveRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet &packet, stg::ServerBoard &board) {
 
     gf::Packet to_send;
     std::cout<<"Reçu"<< std::endl;
 
     if (packet.getType() == stg::ClientMoveRequest::type) {
             stg::ClientMoveRequest request = packet.as<stg::ClientMoveRequest>();
+
+            stg::Color sender_color = request.color;
+
+            std::cout << "From (" << request.from_x << "," << request.from_y << ") to (" << request.to_x << "," << request.to_y <<")" << std::endl;
 
             if (!board.isMoveAllowed(request.from_x,request.from_y,request.to_x,request.to_y)) {
                 stg::ServerMessage response;
@@ -309,13 +313,20 @@ int main() {
 
                 case stg::PLAYING_STATE::IN_GAME:
                 {
-                    gf::Packet clientPacket;
-
                     if (turn == 0) {
-                        bothFlags = dealWithMoveRequest(player1,player2,clientPacket,board, p1Color == 0 ? stg::Color::RED : stg::Color::BLUE);
+                        bothFlags = dealWithMoveRequest(player1,player2,clientPacket,board);
+                    } else {
+                        gf::Packet wrongTurn;
+                        stg::ServerMessage wrT;
+                        wrT.code = stg::ResponseCode::NOT_YOUR_TURN;
+                        wrT.message = "It is not your to play.";
+
+                        wrongTurn.is(wrT);
+
+                        player1.sendPacket(wrongTurn);
                     }
+                    break;
                 }
-                break;
 
                 default:
                 break;
@@ -331,10 +342,17 @@ int main() {
 
                 case stg::PLAYING_STATE::IN_GAME:
                 {
-                    gf::Packet clientPacket;
-
                     if (turn == 1) {
-                        bothFlags = dealWithMoveRequest(player2,player1,clientPacket,board, p1Color == 0 ? stg::Color::BLUE : stg::Color::RED);
+                        bothFlags = dealWithMoveRequest(player2,player1,clientPacket,board);
+                    } else {
+                        gf::Packet wrongTurn;
+                        stg::ServerMessage wrT;
+                        wrT.code = stg::ResponseCode::NOT_YOUR_TURN;
+                        wrT.message = "It is not your to play.";
+
+                        wrongTurn.is(wrT);
+
+                        player2.sendPacket(wrongTurn);
                     }
                 }
                 break;
@@ -345,12 +363,12 @@ int main() {
         }
 
 
-        if (board1Received && board2Received) {
+        if (board1Received && board2Received && state == stg::PLAYING_STATE::PLACEMENT) {
             std::cout << "Both boards were validated" << std::endl;
             state = stg::PLAYING_STATE::IN_GAME;
         }
 
-        if (!bothFlags) {
+        if (!bothFlags && state == stg::PLAYING_STATE::IN_GAME) {
             std::cout << "One flag has been taken. Ending game..." << std::endl;
             state = stg::PLAYING_STATE::END;
             inGame = false;
