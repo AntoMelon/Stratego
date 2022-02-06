@@ -116,7 +116,6 @@ std::pair<bool,bool> dealWithMoveRequest(gf::TcpSocket &sender, gf::TcpSocket &o
                 stg::ServerMessage response;
                 response.code = stg::ResponseCode::MOVE_ERR;
                 response.message = "Déplacement interdit.";
-
                 to_send.is(response);
                 sender.sendPacket(to_send);
                 return {false,true};
