@@ -87,7 +87,7 @@ namespace stg {
     }
 
     void Board::unsetPiece(gf::Vector2i coords) {
-        board[coords.x][coords.y].second.makeBlankPiece();
+        board[coords.x][coords.y].second = Piece::makeBlankPiece();
     }
 
     Piece Board::getPiece(int x, int y) {
@@ -237,17 +237,6 @@ namespace stg {
     }
 
     std::pair<std::string, bool> Board::movePiece(gf::Vector2i from, gf::Vector2i to) {
-        if ((to.x < COORD_MIN) || (to.x > COORD_MAX) || (to.y < COORD_MIN) || (to.y > COORD_MAX)) {
-            return std::pair("Case vide", false);
-        }
-        if(board[from.x][from.y].second.getPieceName()==PieceName::NONE) {
-            return std::pair("Case vide", false);
-        }
-        if(board[to.x][to.y].second.getPieceName()!=PieceName::NONE) {
-            return std::pair("Case occupée", false);
-        }
-
-        // Everything OK, move the piece
         board[to.x][to.y].second = board[from.x][from.y].second;
         board[from.x][from.y].second = Piece::makeBlankPiece();
         return std::pair("", true);

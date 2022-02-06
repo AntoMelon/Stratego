@@ -104,12 +104,10 @@ int main() {
     gf::RectF extendedWorld = gf::RectF::fromSize(ScreenSize);
 
     gf::Texture T_drag;
-    gf::Texture T_Uplay;
     gf::Texture T_waiting_screen("resources/waiting.png");
     gf::Texture T_starting_button("resources/play_button.png");
     gf::Texture T_cadre_selection(gf::Path("resources/selected_indicator.png"));
 
-    gf::Sprite S_Uplay(T_Uplay);
     gf::Sprite S_waiting_screen(T_waiting_screen);
     gf::Sprite S_selected_box(T_cadre_selection);
     gf::Sprite S_starting_button(T_starting_button);
@@ -140,7 +138,6 @@ int main() {
 
     zone_to_place.setOutlineThickness(2);
 
-    S_Uplay.setPosition({0, 100});
     zone_to_place.setPosition({2, 386});
     S_starting_button.setPosition({0, 0});
 
@@ -188,14 +185,12 @@ int main() {
                                         if ((selected != gf::Vector2i(-1, -1)) && (board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::NONE)) selected = gf::Vector2i(-1, -1); //if click on a cell with no piece
                                     } else { // if click on memory -> move piece on board
                                         board.movePiece(selected, select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView)));
-                                        txt.setString(board.getTexture(board.getPiece(selected.x, selected.y).getPieceName(), myColor));
                                         selected = gf::Vector2i(-1, -1);
                                     }
                                 }
                                 break;
 
                             case stg::PLAYING_STATE::IN_GAME:
-                                std::cout << "Selected: (" << selected.x << "," << selected.y << ")" << std::endl;
                                 if (selected == gf::Vector2i(-1, -1)) { // if no click on memory -> put coords in memory
                                     selected = select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView));
                                     if ((selected != gf::Vector2i(-1, -1)) && (board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::NONE))
@@ -281,7 +276,6 @@ int main() {
                 case stg::ServerMoveNotif::type: // if a client do a move
                 {
                     stg::ServerMoveNotif com = communication.as<stg::ServerMoveNotif>();
-                    std::cout << "Base: " << com.from_x << ";" << com.from_y << std::endl << "Cible: " << com.to_x << ";" << com.to_y << std::endl;
                     if (board.getPiece(com.to_x, com.to_y).getPieceName() != stg::PieceName::NONE){
                         board.movePiece(gf::Vector2i({com.from_x, com.from_y}), gf::Vector2i({com.to_x, com.to_y}));
                     } else {
@@ -304,10 +298,8 @@ int main() {
                         myColor = assign.color;
                         myTurn = assign.starting;
                         if( myColor == stg::Color::BLUE) {
-                            T_Uplay = gf::Texture("resources/uplay_blue.png");
                             zone_to_place.setOutlineColor(gf::Color::Blue);
                         } else {
-                            T_Uplay = gf::Texture("resources/uplay_red.png");
                             zone_to_place.setOutlineColor(gf::Color::Red);
                         }
                         board.setPieceFromColor(myColor);
@@ -345,7 +337,6 @@ int main() {
                 }
                 renderer.setView(screenView);
                 renderer.draw(S_starting_button);
-                renderer.draw(S_Uplay);
                 break;
 
             case stg::PLAYING_STATE::IN_GAME:
@@ -356,14 +347,12 @@ int main() {
                     renderer.draw(S_selected_box);
                 }
                 renderer.setView(screenView);
-                renderer.draw(S_Uplay);
                 break;
 
             case stg::PLAYING_STATE::END:
             default:
                 break;
         }
-
         renderer.display();
     }
 
