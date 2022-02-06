@@ -24,6 +24,7 @@ auto threadPackets = [] (gf::TcpSocket &socket,gf::Queue<gf::Packet> &queue) {
             return;
         }
         queue.push(packet);
+        std::this_thread::sleep_for(16ms);
     }
 };
 
@@ -414,7 +415,6 @@ int main() {
         }
 
         std::this_thread::sleep_for(16ms);
-
     }
 
 }
