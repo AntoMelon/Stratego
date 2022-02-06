@@ -61,7 +61,9 @@ namespace stg {
 
         //Render the board
         void render(gf::RenderWindow &renderer, gf::AdaptativeView* view);
-        std::pair<std::string, bool> movePiece(gf::Vector2i from, gf::Vector2i to);
+        void movePiece(gf::Vector2i from, gf::Vector2i to);
+
+        void toString();
 
     private:
         std::vector<std::vector<std::pair<Square,stg::Piece>>> board;

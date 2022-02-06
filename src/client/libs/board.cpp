@@ -88,7 +88,7 @@ namespace stg {
     }
 
     void Board::unsetPiece(gf::Vector2i coords) {
-        board[coords.x][coords.y].second = Piece::makeBlankPiece();
+        board[coords.x][coords.y].second = Piece(stg::PieceName::NONE, stg::Color::EMPTY);
     }
 
     Piece Board::getPiece(int x, int y) {
@@ -237,10 +237,20 @@ namespace stg {
         }
     }
 
-    std::pair<std::string, bool> Board::movePiece(gf::Vector2i from, gf::Vector2i to) {
-        board[to.x][to.y].second = board[from.x][from.y].second;
-        board[from.x][from.y].second = Piece::makeBlankPiece();
-        return std::pair("", true);
+    void Board::movePiece(gf::Vector2i from, gf::Vector2i to) {
+        if (board[to.x][to.y].second.getPieceName() != stg::PieceName::NONE) return;
+        setPiece(to.x, to.y, stg::Piece(board[from.x][from.y].second.getPieceName(), board[from.x][from.y].second.getColor()));
+        board[from.x][from.y].second = Piece(stg::PieceName::NONE, stg::Color::EMPTY);
+        return;
+    }
+
+    void Board::toString(){
+        for (auto y : board) {
+            for (auto x : y) {
+                std::cout << x.second.getPieceName() << " ";
+            }
+            std::cout << std::endl;
+        }
     }
 
 }

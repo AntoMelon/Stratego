@@ -68,6 +68,7 @@ void sendFirstBoard(std::vector<stg::Piece> board, stg::Color color, gf::TcpSock
  * send a try of move to the server
  */
 void sendMove(stg::ClientMoveRequest move, gf::TcpSocket &socket) {
+    std::cout <<"envoie du coup: " << move.from_x << ", " << move.from_y << ", " << move.to_x << ", " << move.to_y << ", " << move.color << std::endl;
     gf::Packet to_send;
     to_send.is(move);
     socket.sendPacket(to_send);
@@ -282,14 +283,15 @@ int main() {
                     if (board.getPiece(com.to_x, com.to_y).getPieceName() != stg::PieceName::NONE){
                         board.movePiece(gf::Vector2i({com.from_x, com.from_y}), gf::Vector2i({com.to_x, com.to_y}));
                     } else {
-                        if (com.atk_alive) {
+                        if (com.atk_alive == true) {
                             board.unsetPiece({com.to_x, com.to_y});
                             board.movePiece(gf::Vector2i({com.from_x, com.from_y}), gf::Vector2i({com.to_x, com.to_y}));
                         }
-                        if (com.def_alive) {
+                        if (com.def_alive == true) {
                             board.unsetPiece({com.from_x, com.from_y});
                         }
                     }
+                    board.toString();
                     myTurn = !myTurn;
                     break;
                 }
