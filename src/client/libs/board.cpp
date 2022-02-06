@@ -17,6 +17,7 @@ namespace stg {
     }
 
     Board::Board() {
+
         this->board = std::vector<std::vector<std::pair<Square,Piece>>>();
         for(int i = COORD_MIN; i <= COORD_MAX; i++) {
             std::vector<std::pair<Square,Piece>> row;

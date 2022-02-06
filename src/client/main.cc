@@ -193,7 +193,10 @@ int main() {
                             case stg::PLAYING_STATE::IN_GAME:
                                 if (selected == gf::Vector2i(-1, -1)) { // if no click on memory -> put coords in memory
                                     selected = select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView));
-                                    if ((selected != gf::Vector2i(-1, -1)) && (board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::NONE))
+                                    if ((selected != gf::Vector2i(-1, -1))
+                                    && ((board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::NONE)
+                                    || (board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::DRAPEAU)
+                                    || (board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::BOMBE)))
                                         selected = gf::Vector2i(-1, -1); //if click on a cell with no piece
                                 } else { // send move to the server
                                     sendMove(
@@ -328,25 +331,16 @@ int main() {
                 break;
 
             case stg::PLAYING_STATE::PLACEMENT:
+            case stg::PLAYING_STATE::IN_GAME:
                 board.render(renderer, currentView);
-                renderer.draw(zone_to_place);
                 renderer.draw(txt);
+                if (state == stg::PLAYING_STATE::PLACEMENT) renderer.draw(zone_to_place);
                 if (selected != gf::Vector2i({-1,-1})) {
                     S_selected_box.setPosition(gf::Vector2i({selected.x * SPRITE_SIZE, selected.y * SPRITE_SIZE}));
                     renderer.draw(S_selected_box);
                 }
                 renderer.setView(screenView);
-                renderer.draw(S_starting_button);
-                break;
-
-            case stg::PLAYING_STATE::IN_GAME:
-                board.render(renderer, currentView);
-                renderer.draw(txt);
-                if (selected != gf::Vector2i({-1,-1})) {
-                    S_selected_box.setPosition(gf::Vector2i({selected.x*SPRITE_SIZE, selected.y*SPRITE_SIZE}));
-                    renderer.draw(S_selected_box);
-                }
-                renderer.setView(screenView);
+                if (state == stg::PLAYING_STATE::PLACEMENT) renderer.draw(S_starting_button);
                 break;
 
             case stg::PLAYING_STATE::END:
