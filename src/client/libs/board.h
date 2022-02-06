@@ -51,6 +51,8 @@ namespace stg {
         // Set the piece at the given coordinates
         void setPiece(int x, int y, Piece piece);
 
+        void unsetPiece(gf::Vector2i coords);
+
         //Set the piece at the initial coordinates from a given color
         void setPieceFromColor(stg::Color color);
 
