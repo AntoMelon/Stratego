@@ -13,8 +13,8 @@ namespace stg {
         bool addPiece(int x, int y, stg::Piece& piece);
         bool removePiece(int x, int y);
 
-        bool isMoveAllowed(int from_x,int from_y, int to_x, int to_y) const;
-        bool movePiece(int from_x, int from_y, int to_x, int to_y);
+        bool isMoveAllowed(int from_x,int from_y, int to_x, int to_y, stg::Color color) const;
+        bool movePiece(int from_x, int from_y, int to_x, int to_y, stg::Color color);
 
         bool stillHasFlag(stg::Color color) const;
 
@@ -23,6 +23,9 @@ namespace stg {
         void setPiece(int x, int y, const stg::Piece& piece);
 
         void importSubmittedBoard(stg::Color color, const std::vector<stg::Piece>& submitted);
+
+
+        void debugPrint() const;
 
 
         private:

@@ -12,7 +12,7 @@ namespace stg {
         }
     }
 
-    bool ServerBoard::isMoveAllowed(int from_x,int from_y, int to_x, int to_y) const {
+    bool ServerBoard::isMoveAllowed(int from_x,int from_y, int to_x, int to_y, stg::Color color) const {
 
         //same place
         if (from_x == to_x && from_y == to_y) {
@@ -28,7 +28,7 @@ namespace stg {
         }
 
         stg::Piece target = getPiece(to_x,to_y);
-        if (target.getColor() == to_move.getColor() || target.getPieceName() == stg::PieceName::LAKE) {
+        if (target.getColor() == color || target.getPieceName() == stg::PieceName::LAKE) {
             return false;
         }
 
@@ -61,8 +61,8 @@ namespace stg {
         return (std::abs(from_x-to_x) == 1 && std::abs(from_y-to_y) == 0) || (std::abs(from_x-to_x) == 0 && std::abs(from_y-to_y) == 1);
     }
 
-    bool ServerBoard::movePiece(int from_x, int from_y, int to_x, int to_y) {
-        if (!isMoveAllowed(from_x,from_y,to_x,to_y)) {
+    bool ServerBoard::movePiece(int from_x, int from_y, int to_x, int to_y, stg::Color color) {
+        if (!isMoveAllowed(from_x,from_y,to_x,to_y,color)) {
             return false;
         }
 
@@ -107,11 +107,24 @@ namespace stg {
             for (int j = 0; j < 10; ++j) {
 
                 if (color == stg::Color::RED) {
-                    setPiece(i,j,submitted[i*10+j]);
+                    setPiece(3-i,9-j,submitted[i*10+j]);
                 } else {
                     setPiece(6+i,j,submitted[i*10+j]);
                 }
             }
+        }
+
+        debugPrint();
+    }
+
+
+    void ServerBoard::debugPrint() const {
+        for (int i = COORD_MIN; i < COORD_MAX; ++i) {
+            for (int j = COORD_MIN; j < COORD_MAX; ++j) {
+                std::cout << getPiece(i,j).getPieceName() << " "; 
+            }
+
+            std::cout << std::endl;
         }
     }
 

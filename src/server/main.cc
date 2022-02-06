@@ -75,6 +75,18 @@ bool isSubmittedBoardOk(std::vector<stg::Piece> &board) {
     return true;
 }
 
+
+std::pair<int,int> coordinatesConversion(std::pair<int,int> coords, stg::Color color) {
+    std::pair<int,int> res = {coords.first,coords.second};
+
+    if (color == stg::Color::RED) {
+        res.first = 9 - res.first;
+        res.second = 9 - res.second;
+    }
+
+    return res;
+}
+
 /*
  * @brief To deal with paquets sent by a client, interpret and treat requests
  * @param gf::TcpSocket &sender : socket from the sender
@@ -91,10 +103,12 @@ bool dealWithMoveRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet
             stg::ClientMoveRequest request = packet.as<stg::ClientMoveRequest>();
 
             stg::Color sender_color = request.color;
+            std::pair<int,int> S_from = coordinatesConversion({request.from_x,request.from_y},sender_color);
+            std::pair<int,int> S_to = coordinatesConversion({request.to_x,request.to_y},sender_color);
 
-            std::cout << "From (" << request.from_x << "," << request.from_y << ") to (" << request.to_x << "," << request.to_y <<")" << std::endl;
+            std::cout << "From (" << S_from.first << "," << S_from.second << ") to (" << S_to.first << "," << S_to.second <<")" << std::endl;
 
-            if (!board.isMoveAllowed(request.from_x,request.from_y,request.to_x,request.to_y)) {
+            if (!board.isMoveAllowed(S_from.first,S_from.second,S_to.first,S_to.second,sender_color)) {
                 stg::ServerMessage response;
                 response.code = stg::ResponseCode::MOVE_ERR;
                 response.message = "Déplacement interdit.";
@@ -112,8 +126,8 @@ bool dealWithMoveRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet
             result.win = false;
             result.lose = false;
 
-            stg::Piece piece_atk = board.getPiece(result.from_x,result.from_y);
-            stg::Piece piece_def = board.getPiece(result.to_x,result.to_y);
+            stg::Piece piece_atk = board.getPiece(S_from.first,S_from.second);
+            stg::Piece piece_def = board.getPiece(S_to.first,S_to.second);
 
             result.str_atk = piece_atk.getPieceName();
             result.str_def = piece_def.getPieceName();
@@ -143,12 +157,17 @@ bool dealWithMoveRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet
                 break;
             }
 
-            board.movePiece(result.from_x,result.from_y,result.to_x,result.to_y);
+            board.movePiece(S_from.first,S_from.second,S_to.first,S_to.second,sender_color);
 
             bool stillRedFlag = board.stillHasFlag(stg::Color::RED);
             bool stillBlueFlag = board.stillHasFlag(stg::Color::BLUE);
 
             if (sender_color == stg::Color::RED) {
+                result.from_x = S_from.first;
+                result.from_y = S_from.second;
+                result.to_x = S_to.first;
+                result.to_y = S_to.second;
+
                 result.win = !stillBlueFlag;
                 result.lose = !stillRedFlag;
             } else {
@@ -160,9 +179,19 @@ bool dealWithMoveRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet
             sender.sendPacket(to_send);
 
             if (sender_color == stg::Color::RED) {
+                result.from_x = request.from_x;
+                result.from_y = request.from_y;
+                result.to_x = request.to_x;
+                result.to_y = request.to_y;
+
                 result.win = !stillRedFlag;
                 result.lose = !stillBlueFlag;
             } else {
+                result.from_x = S_from.first;
+                result.from_y = S_from.second;
+                result.to_x = S_to.first;
+                result.to_y = S_to.second;
+
                 result.win = !stillBlueFlag;
                 result.lose = !stillRedFlag;
             }
@@ -194,7 +223,7 @@ bool dealWithRequestIfInitialBoard(gf::TcpSocket& sender, gf::Packet& packet, st
         std::cout << "Imported" << std::endl;
     } else {
         response.code = stg::ResponseCode::BOARD_ERR;
-        response.message = "Plateau validé.";
+        response.message = "Plateau invalide.";
     }
 
     to_send.is(response);
@@ -308,7 +337,7 @@ int main() {
             switch (state) {
                 case stg::PLAYING_STATE::PLACEMENT:
                 board1Received = dealWithRequestIfInitialBoard(player1,clientPacket,board);
-                std::cout << "Plateau validé en attente de l'adversaire..." << board1Received << std::endl;
+                std::cout << "Plateau 1 reçu, validite: " << board1Received << std::endl;
                 break;
 
                 case stg::PLAYING_STATE::IN_GAME:
@@ -319,7 +348,7 @@ int main() {
                         gf::Packet wrongTurn;
                         stg::ServerMessage wrT;
                         wrT.code = stg::ResponseCode::NOT_YOUR_TURN;
-                        wrT.message = "It is not your to play.";
+                        wrT.message = "It is not your turn to play.";
 
                         wrongTurn.is(wrT);
 
@@ -337,7 +366,7 @@ int main() {
             switch (state) {
                 case stg::PLAYING_STATE::PLACEMENT:
                 board2Received = dealWithRequestIfInitialBoard(player2,clientPacket,board);
-                std::cout << "Plateau validé en attente de l'adversaire..." << board2Received << std::endl;
+                std::cout << "Plateau 2 reçu, validite: " << board2Received << std::endl;
                 break;
 
                 case stg::PLAYING_STATE::IN_GAME:
@@ -348,7 +377,7 @@ int main() {
                         gf::Packet wrongTurn;
                         stg::ServerMessage wrT;
                         wrT.code = stg::ResponseCode::NOT_YOUR_TURN;
-                        wrT.message = "It is not your to play.";
+                        wrT.message = "It is not your turn to play.";
 
                         wrongTurn.is(wrT);
 
