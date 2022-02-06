@@ -93,7 +93,7 @@ bool dealWithMoveRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet
             if (!board.isMoveAllowed(request.from_x,request.from_y,request.to_x,request.to_y)) {
                 stg::ServerMessage response;
                 response.code = stg::ResponseCode::MOVE_ERR;
-                response.message = "Non-allowed move";
+                response.message = "Déplacement interdit.";
 
                 to_send.is(response);
                 sender.sendPacket(to_send);
@@ -183,14 +183,14 @@ bool dealWithRequestIfInitialBoard(gf::TcpSocket& sender, gf::Packet& packet, st
             
     if (boardOk) {
         response.code = stg::ResponseCode::BOARD_OK;
-        response.message = "Board is valid.";
+        response.message = "Plateau validé.";
 
         std::cout << "Tries to import" << std::endl;
         board.importSubmittedBoard(submit.color,submit.board);
         std::cout << "Imported" << std::endl;
     } else {
         response.code = stg::ResponseCode::BOARD_ERR;
-        response.message = "Board is invalid.";
+        response.message = "Plateau validé.";
     }
 
     to_send.is(response);
@@ -225,7 +225,7 @@ int main() {
 
             stg::ServerMessage resp;
             resp.code = stg::ResponseCode::WAITING;
-            resp.message = "You are the first player connected. Waiting for another one...";
+            resp.message = "Vous êtes connecté. En attente d'un adversaire...";
             packet.is(resp);
             player1.sendPacket(packet);
         }
@@ -269,7 +269,7 @@ int main() {
 
     stg::ServerMessage resp;
     resp.code = stg::ResponseCode::STARTING;
-    resp.message = "Both players have connected. Starting the game.";
+    resp.message = "Début de partie. Placez vos pièces.";
     packet.is(resp);
 
 
@@ -304,7 +304,7 @@ int main() {
             switch (state) {
                 case stg::PLAYING_STATE::PLACEMENT:
                 board1Received = dealWithRequestIfInitialBoard(player1,clientPacket,board);
-                std::cout << "Board 1 valid: " << board1Received << std::endl;
+                std::cout << "Plateau validé en attente de l'adversaire..." << board1Received << std::endl;
                 break;
 
                 case stg::PLAYING_STATE::IN_GAME:
@@ -326,7 +326,7 @@ int main() {
             switch (state) {
                 case stg::PLAYING_STATE::PLACEMENT:
                 board2Received = dealWithRequestIfInitialBoard(player2,clientPacket,board);
-                std::cout << "Board 2 valid: " << board2Received << std::endl;
+                std::cout << "Plateau validé en attente de l'adversaire..." << board2Received << std::endl;
                 break;
 
                 case stg::PLAYING_STATE::IN_GAME:
@@ -346,7 +346,7 @@ int main() {
 
 
         if (board1Received && board2Received) {
-            std::cout << "Both boards were validated" << std::endl;
+            std::cout << "Début de partie." << std::endl;
             state = stg::PLAYING_STATE::IN_GAME;
         }
 
