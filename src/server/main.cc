@@ -80,8 +80,12 @@ std::pair<int,int> coordinatesConversion(std::pair<int,int> coords, stg::Color c
     std::pair<int,int> res = {coords.first,coords.second};
 
     if (color == stg::Color::RED) {
-        res.first = 9 - res.first;
-        res.second = 9 - res.second;
+        res.first = COORD_MAX - res.first;
+        res.second = COORD_MAX - res.second;
+
+        std::cout << "Converted to (" << res.first << "," << res.second << ")" << std::endl;
+    } else {
+        std::cout << "Not converted" << std::endl;
     }
 
     return res;

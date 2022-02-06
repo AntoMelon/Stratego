@@ -260,6 +260,12 @@ int main() {
                             }
                             break;
 
+                        case stg::ResponseCode::NOT_YOUR_TURN:
+                            if (state == stg::PLAYING_STATE::IN_GAME) {
+                                txt.setString(com.message);
+                            }
+                        break;
+
                         default:
                             txt.setString("Information reçue non-reconnue ou non-permise en jeu.");
                             break;

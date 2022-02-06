@@ -10,6 +10,8 @@ namespace stg {
         for (int i = 0; i < 100; ++i) {
             board.push_back(stg::Piece::makeBlankPiece());
         }
+
+        setPiece(4,2,{stg::PieceName::LAKE,stg::Color::EMPTY});
     }
 
     bool ServerBoard::isMoveAllowed(int from_x,int from_y, int to_x, int to_y, stg::Color color) const {
@@ -119,8 +121,8 @@ namespace stg {
 
 
     void ServerBoard::debugPrint() const {
-        for (int i = COORD_MIN; i < COORD_MAX; ++i) {
-            for (int j = COORD_MIN; j < COORD_MAX; ++j) {
+        for (int i = COORD_MIN; i <= COORD_MAX; ++i) {
+            for (int j = COORD_MIN; j <= COORD_MAX; ++j) {
                 std::cout << getPiece(i,j).getPieceName() << " "; 
             }
 
