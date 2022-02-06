@@ -297,7 +297,7 @@ int main() {
 
     gf::Packet clientPacket;
 
-    bool bothFlags = false;
+    bool bothFlags = true;
 
     while (inGame) {
         if (packetsFromP1.poll(clientPacket)) {
