@@ -135,6 +135,15 @@ std::pair<bool,bool> dealWithMoveRequest(gf::TcpSocket &sender, gf::TcpSocket &o
             result.str_atk = piece_atk.getPieceName();
             result.str_def = piece_def.getPieceName();
 
+            result.color_atk = piece_atk.getColor();
+            result.color_def = piece_def.getColor();
+
+            if (result.str_def != stg::PieceName::NONE) {
+                result.duel_occured = true;
+            } else {
+                result.duel_occured = false;
+            }
+
             int battle_result = piece_atk.battleResult(piece_def);
 
             result.atk_alive = true;

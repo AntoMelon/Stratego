@@ -295,10 +295,18 @@ int main() {
                         std::cout << "mouvement ou duel gagné" << std::endl;
                         board.unsetPiece({com.to_x, com.to_y});
                         board.movePiece(gf::Vector2i({com.from_x, com.from_y}), gf::Vector2i({com.to_x, com.to_y}));
+
+                        if (com.duel_occured) {
+                            board.setPiece(com.to_x,com.to_y,{com.str_atk,com.color_atk});
+                        }
                     } else {
                         std::cout << "duel perdu" << std::endl;
                         board.unsetPiece({com.from_x, com.from_y});
                         //board.movePiece(gf::Vector2i({com.from_x, com.from_y}), gf::Vector2i({com.to_x, com.to_y}));
+
+                        if (com.duel_occured) {
+                            board.setPiece(com.to_x,com.to_y,{com.str_def,com.color_def});
+                        }
                     }
                     board.toString();
                     myTurn = !myTurn;

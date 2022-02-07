@@ -101,11 +101,15 @@ namespace stg {
         int to_x;
         int to_y;
 
-        int str_atk;
-        int str_def;
+        stg::PieceName str_atk;
+        stg::PieceName str_def;
+
+        stg::Color color_atk;
+        stg::Color color_def;
 
         bool atk_alive;
         bool def_alive;
+        bool duel_occured;
 
         bool win;
         bool lose;
@@ -113,7 +117,7 @@ namespace stg {
 
     template<typename Archive>
     Archive operator|(Archive& ar, ServerMoveNotif& move) {
-        return ar | move.from_x | move.from_y | move.to_x | move.to_y | move.str_atk | move.str_def | move.atk_alive | move.def_alive | move.win | move.lose;
+        return ar | move.from_x | move.from_y | move.to_x | move.to_y | move.str_atk | move.str_def |move.color_atk | move.color_def | move.atk_alive | move.def_alive | move.duel_occured | move.win | move.lose;
     }
 }
 
