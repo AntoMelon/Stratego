@@ -291,19 +291,14 @@ int main() {
                 case stg::ServerMoveNotif::type: // if a client do a move
                 {
                     stg::ServerMoveNotif com = communication.as<stg::ServerMoveNotif>();
-                    if (com.atk_alive == false && com.def_alive == false){
-                        std::cout << "mouvement" << std::endl;
+                    if (com.def_alive == false) {
+                        std::cout << "mouvement ou duel gagné" << std::endl;
+                        board.unsetPiece({com.to_x, com.to_y});
                         board.movePiece(gf::Vector2i({com.from_x, com.from_y}), gf::Vector2i({com.to_x, com.to_y}));
                     } else {
-                        if (com.atk_alive == true && com.def_alive == false) {
-                            std::cout << "duel gagné" << std::endl;
-                            board.unsetPiece({com.to_x, com.to_y});
-                            board.movePiece(gf::Vector2i({com.from_x, com.from_y}), gf::Vector2i({com.to_x, com.to_y}));
-                        }
-                        if (com.def_alive == true && com.atk_alive == false) {
-                            std::cout << "duel perdu" << std::endl;
-                            board.unsetPiece({com.from_x, com.from_y});
-                        }
+                        std::cout << "duel perdu" << std::endl;
+                        board.unsetPiece({com.to_x, com.to_y});
+                        board.movePiece(gf::Vector2i({com.from_x, com.from_y}), gf::Vector2i({com.to_x, com.to_y}));
                     }
                     board.toString();
                     myTurn = !myTurn;
