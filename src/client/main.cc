@@ -297,8 +297,8 @@ int main() {
                         board.movePiece(gf::Vector2i({com.from_x, com.from_y}), gf::Vector2i({com.to_x, com.to_y}));
                     } else {
                         std::cout << "duel perdu" << std::endl;
-                        board.unsetPiece({com.to_x, com.to_y});
-                        board.movePiece(gf::Vector2i({com.from_x, com.from_y}), gf::Vector2i({com.to_x, com.to_y}));
+                        board.unsetPiece({com.from_x, com.from_y});
+                        //board.movePiece(gf::Vector2i({com.from_x, com.from_y}), gf::Vector2i({com.to_x, com.to_y}));
                     }
                     board.toString();
                     myTurn = !myTurn;
