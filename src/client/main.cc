@@ -211,6 +211,7 @@ int main() {
                                              select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView)).y, myColor},
                                             socket_client
                                             );
+                                    std::cout << "Send piece at (" << selected.x << ";" << selected.y << ") which is a " << board.getPiece(selected.x, selected.y).getPieceName() << std::endl;
                                     selected = gf::Vector2i(-1, -1);
                                 }
                                 break;
@@ -290,14 +291,17 @@ int main() {
                 case stg::ServerMoveNotif::type: // if a client do a move
                 {
                     stg::ServerMoveNotif com = communication.as<stg::ServerMoveNotif>();
-                    if (board.getPiece(com.to_x, com.to_y).getPieceName() != stg::PieceName::NONE){
+                    if (com.atk_alive == false && com.def_alive == false){
+                        std::cout << "mouvement" << std::endl;
                         board.movePiece(gf::Vector2i({com.from_x, com.from_y}), gf::Vector2i({com.to_x, com.to_y}));
                     } else {
-                        if (com.atk_alive == true) {
+                        if (com.atk_alive == true && com.def_alive == false) {
+                            std::cout << "duel gagné" << std::endl;
                             board.unsetPiece({com.to_x, com.to_y});
                             board.movePiece(gf::Vector2i({com.from_x, com.from_y}), gf::Vector2i({com.to_x, com.to_y}));
                         }
-                        if (com.def_alive == true) {
+                        if (com.def_alive == true && com.atk_alive == false) {
+                            std::cout << "duel perdu" << std::endl;
                             board.unsetPiece({com.from_x, com.from_y});
                         }
                     }
