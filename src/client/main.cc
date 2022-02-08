@@ -18,6 +18,15 @@
 #include <gf/Views.h>
 #include <gf/Text.h>
 
+/*TODO:
+ * animation duel
+ * drag & drop
+ * résoudre axe plateau
+ * jouable
+ * idée : ajout perso au hud
+ * !!! rdv: 14h lundi 28 !!!
+*/
+
 /*
  * Packet thread
  */
