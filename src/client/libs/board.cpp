@@ -91,7 +91,7 @@ namespace stg {
         board[coords.x][coords.y].second = Piece(stg::PieceName::NONE, stg::Color::EMPTY);
     }
 
-    Piece Board::getPiece(int x, int y) {
+    Piece& Board::getPiece(int x, int y) {
         return board[x][y].second;
     }
 

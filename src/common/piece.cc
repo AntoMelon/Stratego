@@ -17,8 +17,9 @@ namespace stg {
         return display;
     }
 
-    void Piece::setDisplay(bool set_display){
+    Piece& Piece::setDisplay(bool set_display){
         display = set_display;
+        return *this;
     }
 
     int Piece::battleResult(const Piece& other) const {

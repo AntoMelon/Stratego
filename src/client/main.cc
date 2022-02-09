@@ -199,17 +199,20 @@ int main(int argc, char* argv[]) {
                                         selected = select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView));
                                         if ((selected != gf::Vector2i(-1, -1)) && (board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::NONE)) selected = gf::Vector2i(-1, -1); //if click on a cell with no piece
                                     }
+                                    board.getPiece(selected.x, selected.y).display = false;
+                                    std::cout << "is display : " << board.getPiece(selected.x, selected.y).isDisplayed() << std::endl;
                                 }
                                 break;
 
                             case stg::PLAYING_STATE::IN_GAME:
                                 if (selected == gf::Vector2i(-1, -1)) { // if no click on memory -> put coords in memory
                                     selected = select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView));
+                                    board.getPiece(selected.x, selected.y).setDisplay(false);
+                                    std::cout << "is display : " << board.getPiece(selected.x, selected.y).isDisplayed() << std::endl;
                                     if ((selected != gf::Vector2i(-1, -1))
                                     && ((board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::NONE)
                                     || (board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::DRAPEAU)
                                     || (board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::BOMBE))) {
-                                        board.getPiece(selected.x, selected.y).setDisplay(true);
                                         selected = gf::Vector2i(-1, -1); //if click on a cell with no piece
                                     }
                                 }
@@ -228,15 +231,11 @@ int main(int argc, char* argv[]) {
                     if ((mouse_click.x < 128) && (mouse_click.y < 26)) {
                         break;
                     }
+                    board.getPiece(selected.x, selected.y).setDisplay(true);
+                    std::cout << "is display : " << board.getPiece(selected.x, selected.y).isDisplayed() << std::endl;
                     switch (state) {
                         case stg::PLAYING_STATE::PLACEMENT: {
                             auto click_coord = select_on_board(renderer.mapPixelToCoords(mouse_position, *currentView));
-                            std::cout << "Mouse position : " << mouse_position.x << ";" << mouse_position.y
-                                      << std::endl;
-                            std::cout << "Click position : " << click_coord.x << ";" << click_coord.y << std::endl;
-                            std::cout << "Coords position : "
-                                      << renderer.mapPixelToCoords(mouse_position, *currentView).x << ";"
-                                      << renderer.mapPixelToCoords(mouse_position, *currentView).y << std::endl;
                             if (board.getPiece(click_coord.x, click_coord.y).getPieceName() !=
                                 stg::PieceName::NONE) { // if click on a cell with a piece, then swap piece
                                 board.swapPiece(selected, click_coord);
@@ -418,8 +417,8 @@ int main(int argc, char* argv[]) {
                 renderer.draw(txt);
                 if (state == stg::PLAYING_STATE::PLACEMENT) renderer.draw(zone_to_place);
                 if (selected != gf::Vector2i({-1,-1})) {
-                    S_selected_box.setPosition(gf::Vector2i({selected.x * SPRITE_SIZE, selected.y * SPRITE_SIZE}));
-                    renderer.draw(S_selected_box);
+                    /*ùS_selected_box.setPosition(gf::Vector2i({selected.x * SPRITE_SIZE, selected.y * SPRITE_SIZE}));
+                    renderer.draw(S_selected_box);*/
                     renderer.draw(sprite_selected);
                 }
                 renderer.setView(screenView);

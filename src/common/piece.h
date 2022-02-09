@@ -42,7 +42,7 @@ namespace stg {
             PieceName getPieceName() const;
             Color getColor() const;
             bool isDisplayed() const;
-            void setDisplay(bool _display);
+            Piece& setDisplay(bool set_display);
 
             int battleResult(const Piece& other) const;
             

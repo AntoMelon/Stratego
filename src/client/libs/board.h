@@ -42,7 +42,7 @@ namespace stg {
         Square getSquare(int x, int y);
 
         // Get the piece at the given coordinates
-        Piece getPiece(int x, int y);
+        Piece& getPiece(int x, int y);
 
         std::vector<stg::Piece> getAllPiece();
 
