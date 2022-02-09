@@ -186,17 +186,20 @@ int main(int argc, char* argv[]) {
                     break;
 
                 case gf::EventType::MouseButtonPressed: //if click on the window
-                    mouse_pressed = true;
                     if (event.mouseButton.button == gf::MouseButton::Left) {
                         mouse_click = event.mouseButton.coords;
                         switch (state) {
 
                             case stg::PLAYING_STATE::PLACEMENT:
+                                mouse_pressed = true;
                                 if ((mouse_click.x < 128) && (mouse_click.y < 26)) { // send the first board
                                     sendFirstBoard(board.getAllPiece(), myColor, socket_client);
                                 } else {
                                     if (selected == gf::Vector2i(-1, -1)) { // if no click on memory -> put coords in memory
                                         selected = select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView));
+                                        if(selected == gf::Vector2i(-1, -1)) {
+                                            break;
+                                        }
                                         if ((selected != gf::Vector2i(-1, -1)) && (board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::NONE)) selected = gf::Vector2i(-1, -1); //if click on a cell with no piece
                                     }
                                     board.getPiece(selected.x, selected.y).display = false;
@@ -205,8 +208,12 @@ int main(int argc, char* argv[]) {
                                 break;
 
                             case stg::PLAYING_STATE::IN_GAME:
+                                mouse_pressed = true;
                                 if (selected == gf::Vector2i(-1, -1)) { // if no click on memory -> put coords in memory
                                     selected = select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView));
+                                    if(selected == gf::Vector2i(-1, -1)) {
+                                        break;
+                                    }
                                     board.getPiece(selected.x, selected.y).setDisplay(false);
                                     std::cout << "is display : " << board.getPiece(selected.x, selected.y).isDisplayed() << std::endl;
                                     if ((selected != gf::Vector2i(-1, -1))
@@ -236,6 +243,11 @@ int main(int argc, char* argv[]) {
                     switch (state) {
                         case stg::PLAYING_STATE::PLACEMENT: {
                             auto click_coord = select_on_board(renderer.mapPixelToCoords(mouse_position, *currentView));
+                            if (click_coord == gf::Vector2i(-1, -1)) {
+                                mouse_pressed = false;
+                                selected = gf::Vector2i(-1, -1);
+                                break;
+                            }
                             if (board.getPiece(click_coord.x, click_coord.y).getPieceName() !=
                                 stg::PieceName::NONE) { // if click on a cell with a piece, then swap piece
                                 board.swapPiece(selected, click_coord);
@@ -244,10 +256,12 @@ int main(int argc, char* argv[]) {
                                 board.movePiece(selected, click_coord);
                                 selected = gf::Vector2i(-1, -1);
                             }
+                            mouse_pressed = false;
                             break;
                         }
 
                         case stg::PLAYING_STATE::IN_GAME:
+                            mouse_pressed = false;
                             sendMove(
                                     {selected.x, selected.y, select_on_board(renderer.mapPixelToCoords(mouse_position, *currentView)).x,
                                      select_on_board(renderer.mapPixelToCoords(mouse_position, *currentView)).y, myColor},
@@ -260,7 +274,6 @@ int main(int argc, char* argv[]) {
                         default:
                             break;
                     }
-                    mouse_pressed = false;
                     break;
                 }
 
