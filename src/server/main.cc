@@ -366,7 +366,7 @@ int main() {
                         std::pair<bool,bool> moveResult = dealWithMoveRequest(player1,player2,clientPacket,board);
                         bothFlags = moveResult.second;
 
-                        if (moveResult.first) {
+                        if (moveResult.first && bothFlags) {
                             turn = 1 - turn;
                             sendInfoMessage(player2, "Votre tour");
                             sendInfoMessage(player1, "Votre adversaire joue");
@@ -401,7 +401,7 @@ int main() {
                     if (turn == 1) {
                         std::pair<bool,bool> moveResult = dealWithMoveRequest(player2,player1,clientPacket,board);
                         bothFlags = moveResult.second;
-                        if (moveResult.first) {
+                        if (moveResult.first && bothFlags) {
                             turn = 1 - turn;
                             sendInfoMessage(player1, "Votre tour");
                             sendInfoMessage(player2, "Votre adversaire joue");

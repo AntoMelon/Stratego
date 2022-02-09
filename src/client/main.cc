@@ -321,6 +321,13 @@ int main() {
                         board.unsetPiece({com.to_x,com.to_y});
                     }
                     board.toString();
+
+                    if (com.win) {
+                        txt.setString("Vous avez gagné ! :)");
+                    } else if (com.lose) {
+                        txt.setString("Vous avez perdu ! :(");
+                    }
+
                     myTurn = !myTurn;
                     break;
                 }
