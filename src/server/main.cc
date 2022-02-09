@@ -252,9 +252,9 @@ void sendInfoMessage(gf::TcpSocket& dest, std::string message) {
     dest.sendPacket(to_send);
 }
 
-int main() {
+int main(int argc, char* argv[]) {
 
-    gf::TcpListener listener(PORT);
+    gf::TcpListener listener(argc > 1 ? argv[1] : PORT);
     gf::TcpSocket player1, player2;
     gf::Packet packet;
     stg::PLAYING_STATE state = stg::PLAYING_STATE::CONNEXION;

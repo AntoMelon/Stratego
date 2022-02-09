@@ -87,10 +87,10 @@ void sendMove(stg::ClientMoveRequest move, gf::TcpSocket &socket) {
  * main function
  * simulate a game
  */
-int main() {
+int main(int argc, char* argv[]) {
 
     gf::Queue<gf::Packet> serverPackets;
-    gf::TcpSocket socket_client(HOST, PORT);
+    gf::TcpSocket socket_client(argc > 1 ? argv[1] : HOST, argc > 2 ? argv[2] : PORT);
     if (!socket_client) {
         std::cerr << "Connection to server couldn't be established" << std::endl;
         return 1;
