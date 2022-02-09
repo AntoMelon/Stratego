@@ -134,6 +134,9 @@ int main() {
     gf::RectangleShape background(world);
     gf::RectangleShape extendedBackground(extendedWorld);
 
+    gf::Sprite sprite_selected;
+    bool mouse_pressed = false;
+
     background.setColor(gf::Color::Black);
     extendedBackground.setColor(gf::Color::Gray());
 
@@ -155,6 +158,7 @@ int main() {
     gf::Packet communication;
     gf::Vector2i selected(-1,-1);
     gf::Vector2i mouse_click(selected);
+    gf::Vector2i mouse_position(selected);
 
     /*
      * main loop
@@ -182,6 +186,7 @@ int main() {
                     break;
 
                 case gf::EventType::MouseButtonPressed: //if click on the window
+                    mouse_pressed = true;
                     if (event.mouseButton.button == gf::MouseButton::Left) {
                         mouse_click = event.mouseButton.coords;
                         switch (state) {
@@ -193,15 +198,6 @@ int main() {
                                     if (selected == gf::Vector2i(-1, -1)) { // if no click on memory -> put coords in memory
                                         selected = select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView));
                                         if ((selected != gf::Vector2i(-1, -1)) && (board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::NONE)) selected = gf::Vector2i(-1, -1); //if click on a cell with no piece
-                                    } else { // if click on memory -> move piece on board
-                                        auto click_coord = select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView));
-                                        if(board.getPiece(click_coord.x, click_coord.y).getPieceName() != stg::PieceName::NONE) { // if click on a cell with a piece, then swap piece
-                                            board.swapPiece(selected, click_coord);
-                                            selected = gf::Vector2i(-1, -1);
-                                        } else { // if click on a cell with no piece, then move piece
-                                            board.movePiece(selected, click_coord);
-                                            selected = gf::Vector2i(-1, -1);
-                                        }
                                     }
                                 }
                                 break;
@@ -212,16 +208,10 @@ int main() {
                                     if ((selected != gf::Vector2i(-1, -1))
                                     && ((board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::NONE)
                                     || (board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::DRAPEAU)
-                                    || (board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::BOMBE)))
+                                    || (board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::BOMBE))) {
+                                        board.getPiece(selected.x, selected.y).setDisplay(true);
                                         selected = gf::Vector2i(-1, -1); //if click on a cell with no piece
-                                } else { // send move to the server
-                                    sendMove(
-                                            {selected.x, selected.y, select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView)).x,
-                                             select_on_board(renderer.mapPixelToCoords(mouse_click, *currentView)).y, myColor},
-                                            socket_client
-                                            );
-                                    std::cout << "Send piece at (" << selected.x << ";" << selected.y << ") which is a " << board.getPiece(selected.x, selected.y).getPieceName() << std::endl;
-                                    selected = gf::Vector2i(-1, -1);
+                                    }
                                 }
                                 break;
                             default:
@@ -230,11 +220,65 @@ int main() {
                     }
                     break;
 
+                case gf::EventType::MouseMoved:
+                    mouse_position = event.mouseCursor.coords;
+                    break;
+
+                case gf::EventType::MouseButtonReleased: {
+                    if ((mouse_click.x < 128) && (mouse_click.y < 26)) {
+                        break;
+                    }
+                    switch (state) {
+                        case stg::PLAYING_STATE::PLACEMENT: {
+                            auto click_coord = select_on_board(renderer.mapPixelToCoords(mouse_position, *currentView));
+                            std::cout << "Mouse position : " << mouse_position.x << ";" << mouse_position.y
+                                      << std::endl;
+                            std::cout << "Click position : " << click_coord.x << ";" << click_coord.y << std::endl;
+                            std::cout << "Coords position : "
+                                      << renderer.mapPixelToCoords(mouse_position, *currentView).x << ";"
+                                      << renderer.mapPixelToCoords(mouse_position, *currentView).y << std::endl;
+                            if (board.getPiece(click_coord.x, click_coord.y).getPieceName() !=
+                                stg::PieceName::NONE) { // if click on a cell with a piece, then swap piece
+                                board.swapPiece(selected, click_coord);
+                                selected = gf::Vector2i(-1, -1);
+                            } else { // if click on a cell with no piece, then move piece
+                                board.movePiece(selected, click_coord);
+                                selected = gf::Vector2i(-1, -1);
+                            }
+                            break;
+                        }
+
+                        case stg::PLAYING_STATE::IN_GAME:
+                            sendMove(
+                                    {selected.x, selected.y, select_on_board(renderer.mapPixelToCoords(mouse_position, *currentView)).x,
+                                     select_on_board(renderer.mapPixelToCoords(mouse_position, *currentView)).y, myColor},
+                                    socket_client
+                            );
+                            std::cout << "Send piece at (" << selected.x << ";" << selected.y << ") which is a " << board.getPiece(selected.x, selected.y).getPieceName() << std::endl;
+                            selected = gf::Vector2i(-1, -1);
+                            break;
+
+                        default:
+                            break;
+                    }
+                    mouse_pressed = false;
+                    break;
+                }
+
                 default:
                     break;
             }
             views.processEvent(event);
         }
+
+        if(selected != gf::Vector2i(-1, -1) && mouse_pressed) {
+            // If a piece is selected, then make it follow the mouse cursor
+            auto piece = board.getPiece(selected.x, selected.y);
+            auto texture_selected = board.getTexture(piece.getPieceName(), piece.getColor());
+            sprite_selected.setTexture(board.manager.getTexture(gf::Path(texture_selected)));
+            sprite_selected.setPosition(renderer.mapPixelToCoords(gf::Vector2i({mouse_position.x-SPRITE_SIZE/2,mouse_position.y-SPRITE_SIZE/2}), *currentView));
+        }
+
 
         /*
          * Take message from server and all the things linked
@@ -376,6 +420,7 @@ int main() {
                 if (selected != gf::Vector2i({-1,-1})) {
                     S_selected_box.setPosition(gf::Vector2i({selected.x * SPRITE_SIZE, selected.y * SPRITE_SIZE}));
                     renderer.draw(S_selected_box);
+                    renderer.draw(sprite_selected);
                 }
                 renderer.setView(screenView);
                 if (state == stg::PLAYING_STATE::PLACEMENT) renderer.draw(S_starting_button);
@@ -385,6 +430,7 @@ int main() {
             default:
                 break;
         }
+
         renderer.display();
     }
 

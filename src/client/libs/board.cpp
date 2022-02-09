@@ -227,7 +227,7 @@ namespace stg {
                     }
                 }
                 renderer.draw(sprite);
-                if(board[i][j].second.getPieceName()!=PieceName::NONE) {
+                if(board[i][j].second.getPieceName()!=PieceName::NONE && board[i][j].second.display) {
                     gf::Sprite sprite;
                     sprite.setPosition(gf::Vector2f(i*SPRITE_SIZE, j*SPRITE_SIZE));
                     sprite.setTexture(manager.getTexture(gf::Path(pieceTextures.at(std::pair(board[i][j].second.getPieceName(), board[i][j].second.getColor())))));

@@ -67,11 +67,11 @@ namespace stg {
 
         void swapPiece(gf::Vector2i first, gf::Vector2i other);
 
+        gf::ResourceManager manager;
     private:
         std::vector<std::vector<std::pair<Square,stg::Piece>>> board;
         std::map<std::pair<stg::PieceName, stg::Color>, std::string> pieceTextures;
         std::map<std::string, std::string> tileTextures;
-        gf::ResourceManager manager;
     };
 
 }

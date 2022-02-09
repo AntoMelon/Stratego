@@ -2,7 +2,7 @@
 
 namespace stg {
     Piece::Piece(PieceName _name, Color _col) : name(_name), col(_col) {
-
+        display = true;
     }
 
     PieceName Piece::getPieceName() const {
@@ -11,6 +11,14 @@ namespace stg {
 
     Color Piece::getColor() const {
         return col;
+    }
+
+    bool Piece::isDisplayed() const{
+        return display;
+    }
+
+    void Piece::setDisplay(bool set_display){
+        display = set_display;
     }
 
     int Piece::battleResult(const Piece& other) const {

@@ -41,6 +41,8 @@ namespace stg {
 
             PieceName getPieceName() const;
             Color getColor() const;
+            bool isDisplayed() const;
+            void setDisplay(bool _display);
 
             int battleResult(const Piece& other) const;
             
@@ -48,7 +50,7 @@ namespace stg {
 
             PieceName name;
             Color col;
-
+            bool display;
     };
 
     template<typename Archive>
