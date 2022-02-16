@@ -7,19 +7,24 @@
 namespace stg {
 
     ServerBoard::ServerBoard() : board({}) {
-        for (int i = 0; i < 100; ++i) {
-            board.push_back(stg::Piece::makeBlankPiece());
+        
+        for (int i = COORD_MIN; i <= COORD_MAX; ++i) {
+            std::vector<stg::Piece> col;
+            for (int j = COORD_MIN; j <= COORD_MAX; ++j) {
+                col.push_back(stg::Piece::makeBlankPiece());
+            }
+            board.push_back(col);
         }
 
-        setPiece(4,2,{stg::PieceName::LAKE,stg::Color::EMPTY});
-        setPiece(4,3,{stg::PieceName::LAKE,stg::Color::EMPTY});
-        setPiece(5,2,{stg::PieceName::LAKE,stg::Color::EMPTY});
-        setPiece(5,3,{stg::PieceName::LAKE,stg::Color::EMPTY});
+        setPiece(2,4,{stg::PieceName::LAKE,stg::Color::EMPTY});
+        setPiece(3,4,{stg::PieceName::LAKE,stg::Color::EMPTY});
+        setPiece(2,5,{stg::PieceName::LAKE,stg::Color::EMPTY});
+        setPiece(3,5,{stg::PieceName::LAKE,stg::Color::EMPTY});
 
-        setPiece(4,6,{stg::PieceName::LAKE,stg::Color::EMPTY});
-        setPiece(4,7,{stg::PieceName::LAKE,stg::Color::EMPTY});
-        setPiece(5,6,{stg::PieceName::LAKE,stg::Color::EMPTY});
-        setPiece(5,7,{stg::PieceName::LAKE,stg::Color::EMPTY});
+        setPiece(6,4,{stg::PieceName::LAKE,stg::Color::EMPTY});
+        setPiece(7,4,{stg::PieceName::LAKE,stg::Color::EMPTY});
+        setPiece(6,5,{stg::PieceName::LAKE,stg::Color::EMPTY});
+        setPiece(7,5,{stg::PieceName::LAKE,stg::Color::EMPTY});
 
     }
 
@@ -104,20 +109,22 @@ namespace stg {
     }
 
     bool ServerBoard::stillHasFlag(stg::Color color) const {
-        for (auto piece : board) {
-            if (piece.getPieceName() == stg::PieceName::DRAPEAU && piece.getColor() == color) {
-                return true;
+        for (auto col : board) {
+            for (auto piece : col) {
+                if (piece.getPieceName() == stg::PieceName::DRAPEAU && piece.getColor() == color) {
+                    return true;
+                }
             }
         }
         return false;
     }
 
     stg::Piece ServerBoard::getPiece(int x, int y) const {
-        return board[x*10+y];
+        return board[x][y];
     }
 
     void ServerBoard::setPiece(int x, int y, const stg::Piece& piece) {
-        board[x*10+y] = piece;
+        board[x][y] = piece;
     }
 
     void ServerBoard::importSubmittedBoard(stg::Color color, const std::vector<stg::Piece>& submitted) {
@@ -125,9 +132,9 @@ namespace stg {
             for (int j = 0; j < 10; ++j) {
 
                 if (color == stg::Color::RED) {
-                    setPiece(3-i,9-j,submitted[i*10+j]);
+                    setPiece(9-j,3-i,submitted[i*10+j]);
                 } else {
-                    setPiece(6+i,j,submitted[i*10+j]);
+                    setPiece(j,6+i,submitted[i*10+j]);
                 }
             }
         }

@@ -78,7 +78,7 @@ bool isSubmittedBoardOk(std::vector<stg::Piece> &board) {
 
 
 std::pair<int,int> coordinatesConversion(std::pair<int,int> coords, stg::Color color) {
-    std::pair<int,int> res = {coords.second,coords.first};
+    std::pair<int,int> res = {coords.first,coords.second};
 
     if (color == stg::Color::RED) {
         res.first = COORD_MAX - res.first;
@@ -186,18 +186,18 @@ std::pair<bool,bool> dealWithMoveRequest(gf::TcpSocket &sender, gf::TcpSocket &o
             sender.sendPacket(to_send);
 
             if (sender_color == stg::Color::RED) {
-                result.from_x = S_from.second;
-                result.from_y = S_from.first;
-                result.to_x = S_to.second;
-                result.to_y = S_to.first;
+                result.from_x = S_from.first;
+                result.from_y = S_from.second;
+                result.to_x = S_to.first;
+                result.to_y = S_to.second;
 
                 result.win = !stillRedFlag;
                 result.lose = !stillBlueFlag;
             } else {
-                result.from_x = COORD_MAX - S_from.second;
-                result.from_y = COORD_MAX - S_from.first;
-                result.to_x = COORD_MAX - S_to.second;
-                result.to_y = COORD_MAX - S_to.first;
+                result.from_x = COORD_MAX - S_from.first;
+                result.from_y = COORD_MAX - S_from.second;
+                result.to_x = COORD_MAX - S_to.first;
+                result.to_y = COORD_MAX - S_to.second;
 
                 result.win = !stillBlueFlag;
                 result.lose = !stillRedFlag;

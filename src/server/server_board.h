@@ -29,7 +29,7 @@ namespace stg {
 
 
         private:
-        std::vector<stg::Piece> board;
+        std::vector<std::vector<stg::Piece>> board;
     };
 
     template<typename Archive>
