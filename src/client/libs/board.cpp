@@ -24,7 +24,7 @@ namespace stg {
             for(int j = COORD_MIN; j <= COORD_MAX; j++) {
                 if (j==4 || j==5) {
                     if(i==2 || i==3 || i==6 || i==7) {
-                        row.push_back(std::pair(Square(TileType::River, false), Piece::makeBlankPiece()));
+                        row.push_back(std::pair(Square(TileType::River, false), Piece(stg::PieceName::LAKE,stg::Color::EMPTY)));
                         continue;
                     }
                 }
@@ -227,7 +227,7 @@ namespace stg {
                     }
                 }
                 renderer.draw(sprite);
-                if(board[i][j].second.getPieceName()!=PieceName::NONE && board[i][j].second.display) {
+                if(board[i][j].second.getPieceName()!=PieceName::NONE && board[i][j].second.getPieceName() != stg::PieceName::LAKE && board[i][j].second.display) {
                     gf::Sprite sprite;
                     sprite.setPosition(gf::Vector2f(i*SPRITE_SIZE, j*SPRITE_SIZE));
                     sprite.setTexture(manager.getTexture(gf::Path(pieceTextures.at(std::pair(board[i][j].second.getPieceName(), board[i][j].second.getColor())))));
