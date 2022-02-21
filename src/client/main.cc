@@ -20,11 +20,9 @@
 
 /*TODO:
  * animation duel
- * drag & drop
- * résoudre axe plateau
- * jouable
  * idée : ajout perso au hud
  * !!! rdv: 14h lundi 28 !!!
+ * empêcher envoie move si -1;-1
 */
 
 /*
@@ -190,6 +188,9 @@ int main(int argc, char* argv[]) {
                         mouse_click = event.mouseButton.coords;
                         switch (state) {
 
+                            case stg::PLAYING_STATE::CONNEXION:
+                                break;
+
                             case stg::PLAYING_STATE::PLACEMENT:
                                 mouse_pressed = true;
                                 if ((mouse_click.x < 128) && (mouse_click.y < 26)) { // send the first board
@@ -248,8 +249,7 @@ int main(int argc, char* argv[]) {
                                 selected = gf::Vector2i(-1, -1);
                                 break;
                             }
-                            if (board.getPiece(click_coord.x, click_coord.y).getPieceName() !=
-                                stg::PieceName::NONE) { // if click on a cell with a piece, then swap piece
+                            if (board.getPiece(click_coord.x, click_coord.y).getPieceName() != stg::PieceName::NONE) { // if click on a cell with a piece, then swap piece
                                 board.swapPiece(selected, click_coord);
                                 selected = gf::Vector2i(-1, -1);
                             } else { // if click on a cell with no piece, then move piece
@@ -262,13 +262,18 @@ int main(int argc, char* argv[]) {
 
                         case stg::PLAYING_STATE::IN_GAME:
                             mouse_pressed = false;
-                            sendMove(
-                                    {selected.x, selected.y, select_on_board(renderer.mapPixelToCoords(mouse_position, *currentView)).x,
-                                     select_on_board(renderer.mapPixelToCoords(mouse_position, *currentView)).y, myColor},
-                                    socket_client
-                            );
-                            std::cout << "Send piece at (" << selected.x << ";" << selected.y << ") which is a " << board.getPiece(selected.x, selected.y).getPieceName() << std::endl;
-                            selected = gf::Vector2i(-1, -1);
+                            if ((selected != gf::Vector2i(-1,-1)) && (select_on_board(renderer.mapPixelToCoords(mouse_position, *currentView)) != gf::Vector2i(-1,-1))) {
+                                sendMove(
+                                        {selected.x, selected.y,
+                                         select_on_board(renderer.mapPixelToCoords(mouse_position, *currentView)).x,
+                                         select_on_board(renderer.mapPixelToCoords(mouse_position, *currentView)).y,
+                                         myColor},
+                                        socket_client
+                                );
+                                std::cout << "Send piece at (" << selected.x << ";" << selected.y << ") which is a "
+                                          << board.getPiece(selected.x, selected.y).getPieceName() << std::endl;
+                                selected = gf::Vector2i(-1, -1);
+                            }
                             break;
 
                         default:

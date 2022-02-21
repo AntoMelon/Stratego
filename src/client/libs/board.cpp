@@ -238,6 +238,7 @@ namespace stg {
     }
 
     void Board::movePiece(gf::Vector2i from, gf::Vector2i to) {
+        if ((from == gf::Vector2i(-1,-1)) || (to == gf::Vector2i(-1,-1))) return;
         if (board[to.x][to.y].second.getPieceName() != stg::PieceName::NONE) return;
         setPiece(to.x, to.y, stg::Piece(board[from.x][from.y].second.getPieceName(), board[from.x][from.y].second.getColor()));
         board[from.x][from.y].second = Piece(stg::PieceName::NONE, stg::Color::EMPTY);
@@ -254,6 +255,7 @@ namespace stg {
     }
 
     void Board::swapPiece(gf::Vector2i first, gf::Vector2i other) {
+        if ((first == gf::Vector2i(-1,-1)) || (other == gf::Vector2i(-1,-1))) return;
         if (board[first.x][first.y].second.getPieceName() == stg::PieceName::NONE) return;
         if (board[other.x][other.y].second.getPieceName() == stg::PieceName::NONE) return;
         stg::Piece firstPiece = stg::Piece(board[first.x][first.y].second.getPieceName(), board[first.x][first.y].second.getColor());
