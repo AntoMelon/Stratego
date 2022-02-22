@@ -109,7 +109,8 @@ int main(int argc, char* argv[]) {
     gf::RenderWindow renderer(window);
 
     gf::RectF world = gf::RectF::fromSize({640, 680}); //monde du jeu
-    gf::RectF extendedWorld = gf::RectF::fromSize(ScreenSize);
+    gf::RectF hud = gf::RectF::fromSize({20, 680}); //hud right
+    gf::RectF extendedWorld = gf::RectF::fromSize(ScreenSize); //fenêtre
 
     gf::Texture T_drag;
     gf::Texture T_waiting_screen("resources/waiting.png");
@@ -121,21 +122,25 @@ int main(int argc, char* argv[]) {
     gf::Sprite S_starting_button(T_starting_button);
 
     gf::ViewContainer views;
-    gf::FitView fitView(world);
+    gf::FitView worldView(world);
+    gf::FitView hudView(hud);
     gf::ScreenView screenView;
-    views.addView(fitView);
+    views.addView(worldView);
+    views.addView(hudView);
     views.addView(screenView);
     views.setInitialFramebufferSize(ScreenSize);
-    gf::AdaptativeView *currentView = &fitView;
+    gf::AdaptativeView *currentView = &worldView;
 
     gf::RectangleShape zone_to_place;
     gf::RectangleShape background(world);
+    gf::RectangleShape hudbackground(hud);
     gf::RectangleShape extendedBackground(extendedWorld);
 
     gf::Sprite sprite_selected;
     bool mouse_pressed = false;
 
     background.setColor(gf::Color::Black);
+    hudbackground.setColor(gf::Color::Black);
     extendedBackground.setColor(gf::Color::Gray());
 
     gf::Font font("resources/arial.ttf");
@@ -204,7 +209,6 @@ int main(int argc, char* argv[]) {
                                         if ((selected != gf::Vector2i(-1, -1)) && (board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::NONE)) selected = gf::Vector2i(-1, -1); //if click on a cell with no piece
                                     }
                                     board.getPiece(selected.x, selected.y).display = false;
-                                    std::cout << "is display : " << board.getPiece(selected.x, selected.y).isDisplayed() << std::endl;
                                 }
                                 break;
 
@@ -216,7 +220,6 @@ int main(int argc, char* argv[]) {
                                         break;
                                     }
                                     board.getPiece(selected.x, selected.y).setDisplay(false);
-                                    std::cout << "is display : " << board.getPiece(selected.x, selected.y).isDisplayed() << std::endl;
                                     if ((selected != gf::Vector2i(-1, -1))
                                     && ((board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::NONE)
                                     || (board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::DRAPEAU)
@@ -225,6 +228,7 @@ int main(int argc, char* argv[]) {
                                     }
                                 }
                                 break;
+
                             default:
                                 break;
                         }
@@ -236,11 +240,10 @@ int main(int argc, char* argv[]) {
                     break;
 
                 case gf::EventType::MouseButtonReleased: {
-                    if ((mouse_click.x < 128) && (mouse_click.y < 26)) {
-                        break;
-                    }
+                    std::cout << "bouton gauche relaché" << std::endl;
+                    if (selected == gf::Vector2i(-1,-1)) break;
                     board.getPiece(selected.x, selected.y).setDisplay(true);
-                    std::cout << "is display : " << board.getPiece(selected.x, selected.y).isDisplayed() << std::endl;
+                    std::cout << "display passé" << std::endl;
                     switch (state) {
                         case stg::PLAYING_STATE::PLACEMENT: {
                             auto click_coord = select_on_board(renderer.mapPixelToCoords(mouse_position, *currentView));
@@ -421,6 +424,7 @@ int main(int argc, char* argv[]) {
         renderer.clear();
         renderer.setView(*currentView);
         renderer.draw(extendedBackground);
+        renderer.draw(hudbackground);
         renderer.draw(background);
 
         switch(state) {
@@ -435,8 +439,6 @@ int main(int argc, char* argv[]) {
                 renderer.draw(txt);
                 if (state == stg::PLAYING_STATE::PLACEMENT) renderer.draw(zone_to_place);
                 if (selected != gf::Vector2i({-1,-1})) {
-                    /*ùS_selected_box.setPosition(gf::Vector2i({selected.x * SPRITE_SIZE, selected.y * SPRITE_SIZE}));
-                    renderer.draw(S_selected_box);*/
                     renderer.draw(sprite_selected);
                 }
                 renderer.setView(screenView);
@@ -447,7 +449,7 @@ int main(int argc, char* argv[]) {
             default:
                 break;
         }
-
+        renderer.setView(screenView);
         renderer.display();
     }
 
