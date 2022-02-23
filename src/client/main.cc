@@ -115,10 +115,8 @@ int main(int argc, char* argv[]) {
     gf::Texture T_drag;
     gf::Texture T_waiting_screen("resources/waiting.png");
     gf::Texture T_starting_button("resources/play_button.png");
-    gf::Texture T_cadre_selection(gf::Path("resources/selected_indicator.png"));
 
     gf::Sprite S_waiting_screen(T_waiting_screen);
-    gf::Sprite S_selected_box(T_cadre_selection);
     gf::Sprite S_starting_button(T_starting_button);
 
     gf::ViewContainer views;
