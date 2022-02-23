@@ -75,7 +75,6 @@ void sendFirstBoard(std::vector<stg::Piece> board, stg::Color color, gf::TcpSock
  * send a try of move to the server
  */
 void sendMove(stg::ClientMoveRequest move, gf::TcpSocket &socket) {
-    std::cout <<"envoie du coup: " << move.from_x << ", " << move.from_y << ", " << move.to_x << ", " << move.to_y << ", " << move.color << std::endl;
     gf::Packet to_send;
     to_send.is(move);
     socket.sendPacket(to_send);
@@ -108,37 +107,34 @@ int main(int argc, char* argv[]) {
     gf::Window window("Stratego online", ScreenSize);
     gf::RenderWindow renderer(window);
 
-    gf::RectF world = gf::RectF::fromSize({640, 680}); //monde du jeu
-    gf::RectF hud = gf::RectF::fromSize({20, 680}); //hud right
+    gf::RectF world = gf::RectF::fromSize({760, 680}); //monde du jeu
     gf::RectF extendedWorld = gf::RectF::fromSize(ScreenSize); //fenêtre
 
     gf::Texture T_drag;
+    gf::Texture T_hud_rules("resources/hud_rules.png");
     gf::Texture T_waiting_screen("resources/waiting.png");
     gf::Texture T_starting_button("resources/play_button.png");
 
+    gf::Sprite S_hud_rules(T_hud_rules);
     gf::Sprite S_waiting_screen(T_waiting_screen);
     gf::Sprite S_starting_button(T_starting_button);
 
     gf::ViewContainer views;
     gf::FitView worldView(world);
-    gf::FitView hudView(hud);
     gf::ScreenView screenView;
     views.addView(worldView);
-    views.addView(hudView);
     views.addView(screenView);
     views.setInitialFramebufferSize(ScreenSize);
     gf::AdaptativeView *currentView = &worldView;
 
     gf::RectangleShape zone_to_place;
     gf::RectangleShape background(world);
-    gf::RectangleShape hudbackground(hud);
     gf::RectangleShape extendedBackground(extendedWorld);
 
     gf::Sprite sprite_selected;
     bool mouse_pressed = false;
 
     background.setColor(gf::Color::Black);
-    hudbackground.setColor(gf::Color::Black);
     extendedBackground.setColor(gf::Color::Gray());
 
     gf::Font font("resources/arial.ttf");
@@ -152,6 +148,7 @@ int main(int argc, char* argv[]) {
 
     zone_to_place.setOutlineThickness(2);
 
+    S_hud_rules.setPosition({642,0});
     zone_to_place.setPosition({2, 386});
     S_starting_button.setPosition({0, 0});
 
@@ -238,10 +235,8 @@ int main(int argc, char* argv[]) {
                     break;
 
                 case gf::EventType::MouseButtonReleased: {
-                    std::cout << "bouton gauche relaché" << std::endl;
                     if (selected == gf::Vector2i(-1,-1)) break;
                     board.getPiece(selected.x, selected.y).setDisplay(true);
-                    std::cout << "display passé" << std::endl;
                     switch (state) {
                         case stg::PLAYING_STATE::PLACEMENT: {
                             auto click_coord = select_on_board(renderer.mapPixelToCoords(mouse_position, *currentView));
@@ -271,8 +266,6 @@ int main(int argc, char* argv[]) {
                                          myColor},
                                         socket_client
                                 );
-                                std::cout << "Send piece at (" << selected.x << ";" << selected.y << ") which is a "
-                                          << board.getPiece(selected.x, selected.y).getPieceName() << std::endl;
                                 selected = gf::Vector2i(-1, -1);
                             }
                             break;
@@ -363,7 +356,6 @@ int main(int argc, char* argv[]) {
                 {
                     stg::ServerMoveNotif com = communication.as<stg::ServerMoveNotif>();
                     if (com.atk_alive && !com.def_alive) {
-                        std::cout << "mouvement ou duel gagné" << std::endl;
                         board.unsetPiece({com.to_x, com.to_y});
                         board.movePiece(gf::Vector2i({com.from_x, com.from_y}), gf::Vector2i({com.to_x, com.to_y}));
 
@@ -371,9 +363,7 @@ int main(int argc, char* argv[]) {
                             board.setPiece(com.to_x,com.to_y,{com.str_atk,com.color_atk});
                         }
                     } else if (!com.atk_alive && com.def_alive) {
-                        std::cout << "duel perdu" << std::endl;
                         board.unsetPiece({com.from_x, com.from_y});
-                        //board.movePiece(gf::Vector2i({com.from_x, com.from_y}), gf::Vector2i({com.to_x, com.to_y}));
 
                         if (com.duel_occured) {
                             board.setPiece(com.to_x,com.to_y,{com.str_def,com.color_def});
@@ -422,18 +412,19 @@ int main(int argc, char* argv[]) {
         renderer.clear();
         renderer.setView(*currentView);
         renderer.draw(extendedBackground);
-        renderer.draw(hudbackground);
         renderer.draw(background);
 
         switch(state) {
             case stg::PLAYING_STATE::CONNEXION:
                 renderer.draw(S_waiting_screen);
+                renderer.draw(S_hud_rules);
                 renderer.draw(txt);
                 break;
 
             case stg::PLAYING_STATE::PLACEMENT:
             case stg::PLAYING_STATE::IN_GAME:
                 board.render(renderer, currentView);
+                renderer.draw(S_hud_rules);
                 renderer.draw(txt);
                 if (state == stg::PLAYING_STATE::PLACEMENT) renderer.draw(zone_to_place);
                 if (selected != gf::Vector2i({-1,-1})) {
