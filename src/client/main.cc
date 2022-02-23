@@ -111,10 +111,12 @@ int main(int argc, char* argv[]) {
     gf::RectF extendedWorld = gf::RectF::fromSize(ScreenSize); //fenêtre
 
     gf::Texture T_drag;
+    gf::Texture T_end_screen;
     gf::Texture T_hud_rules("resources/hud_rules.png");
     gf::Texture T_waiting_screen("resources/waiting.png");
     gf::Texture T_starting_button("resources/play_button.png");
 
+    gf::Sprite S_end_screen(T_end_screen);
     gf::Sprite S_hud_rules(T_hud_rules);
     gf::Sprite S_waiting_screen(T_waiting_screen);
     gf::Sprite S_starting_button(T_starting_button);
@@ -375,8 +377,22 @@ int main(int argc, char* argv[]) {
                     board.toString();
 
                     if (com.win) {
+                        state = stg::PLAYING_STATE::END;
+                        if (myColor == stg::Color::BLUE) {
+                            T_end_screen = gf::Texture("resources/blue_win.png");
+                        } else {
+                            T_end_screen = gf::Texture("resources/red_win.png");
+                        }
+                        S_end_screen = gf::Sprite(T_end_screen);
                         txt.setString("Vous avez gagné ! :)");
                     } else if (com.lose) {
+                        state = stg::PLAYING_STATE::END;
+                        if (myColor == stg::Color::BLUE) {
+                            T_end_screen = gf::Texture("resources/red_win.png");
+                        } else {
+                            T_end_screen = gf::Texture("resources/blue_win.png");
+                        }
+                        S_end_screen = gf::Sprite(T_end_screen);
                         txt.setString("Vous avez perdu ! :(");
                     }
 
@@ -435,6 +451,9 @@ int main(int argc, char* argv[]) {
                 break;
 
             case stg::PLAYING_STATE::END:
+                renderer.draw(S_end_screen);
+                renderer.draw(S_hud_rules);
+                renderer.draw(txt);
             default:
                 break;
         }
