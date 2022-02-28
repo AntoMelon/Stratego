@@ -40,7 +40,7 @@ gf::Vector2i select_on_board(gf::Vector2i selection) {
 
     selection = gf::Vector2i(selection.x / SPRITE_SIZE, selection.y / SPRITE_SIZE);
 
-    if ((selection.x < COORD_MIN) || (selection.x > COORD_MAX) || (selection.y < COORD_MIN) || (selection.x > COORD_MAX)) return gf::Vector2i(-1, -1);
+    if ((selection.x < COORD_MIN) || (selection.x > COORD_MAX) || (selection.y < COORD_MIN) || (selection.y > COORD_MAX)) return gf::Vector2i(-1, -1);
 
     if (((selection.y == 4) || (selection.y == 5)) && ((selection.x == 2) || (selection.x == 3) || (selection.x == 6) || (selection.x == 7))) return gf::Vector2i(-1, -1);
 
@@ -105,16 +105,18 @@ int main(int argc, char* argv[]) {
     gf::Window window("Stratego online", ScreenSize);
     gf::RenderWindow renderer(window);
 
-    gf::RectF world = gf::RectF::fromSize({640, 680}); //monde du jeu
-    gf::RectF extendedWorld = gf::RectF::fromSize(ScreenSize);
+    gf::RectF world = gf::RectF::fromSize({760, 680}); //monde du jeu
+    gf::RectF extendedWorld = gf::RectF::fromSize(ScreenSize); //fenêtre
 
     gf::Texture T_drag;
+    gf::Texture T_end_screen;
+    gf::Texture T_hud_rules("resources/hud_rules.png");
     gf::Texture T_waiting_screen("resources/waiting.png");
     gf::Texture T_starting_button("resources/play_button.png");
-    gf::Texture T_cadre_selection(gf::Path("resources/selected_indicator.png"));
 
+    gf::Sprite S_end_screen(T_end_screen);
+    gf::Sprite S_hud_rules(T_hud_rules);
     gf::Sprite S_waiting_screen(T_waiting_screen);
-    gf::Sprite S_selected_box(T_cadre_selection);
     gf::Sprite S_starting_button(T_starting_button);
 
     gf::ViewContainer views;
@@ -146,6 +148,7 @@ int main(int argc, char* argv[]) {
 
     zone_to_place.setOutlineThickness(2);
 
+    S_hud_rules.setPosition({642,0});
     zone_to_place.setPosition({2, 386});
     S_starting_button.setPosition({0, 0});
 
@@ -381,8 +384,22 @@ int main(int argc, char* argv[]) {
                     board.toString();
 
                     if (com.win) {
+                        state = stg::PLAYING_STATE::END;
+                        if (myColor == stg::Color::BLUE) {
+                            T_end_screen = gf::Texture("resources/blue_win.png");
+                        } else {
+                            T_end_screen = gf::Texture("resources/red_win.png");
+                        }
+                        S_end_screen = gf::Sprite(T_end_screen);
                         txt.setString("Vous avez gagné ! :)");
                     } else if (com.lose) {
+                        state = stg::PLAYING_STATE::END;
+                        if (myColor == stg::Color::BLUE) {
+                            T_end_screen = gf::Texture("resources/red_win.png");
+                        } else {
+                            T_end_screen = gf::Texture("resources/blue_win.png");
+                        }
+                        S_end_screen = gf::Sprite(T_end_screen);
                         txt.setString("Vous avez perdu ! :(");
                     }
 
@@ -423,12 +440,14 @@ int main(int argc, char* argv[]) {
         switch(state) {
             case stg::PLAYING_STATE::CONNEXION:
                 renderer.draw(S_waiting_screen);
+                renderer.draw(S_hud_rules);
                 renderer.draw(txt);
                 break;
 
             case stg::PLAYING_STATE::PLACEMENT:
             case stg::PLAYING_STATE::IN_GAME:
                 board.render(renderer, currentView);
+                renderer.draw(S_hud_rules);
                 renderer.draw(txt);
                 if (state == stg::PLAYING_STATE::PLACEMENT) renderer.draw(zone_to_place);
                 if (selected != gf::Vector2i({-1,-1})) {
@@ -441,10 +460,15 @@ int main(int argc, char* argv[]) {
                 break;
 
             case stg::PLAYING_STATE::END:
+                renderer.draw(S_end_screen);
+                renderer.draw(S_hud_rules);
+                renderer.draw(txt);
+                break;
             default:
                 break;
         }
-
+        
+        renderer.setView(screenView);
         renderer.display();
     }
 
