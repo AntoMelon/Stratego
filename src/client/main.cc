@@ -19,8 +19,12 @@
 #include <gf/Text.h>
 
 /*TODO:
- * animation duel
-*/
+ *  animation duel
+ *  message "client quitte"
+ *  ajouter filtre sur cases atteignable
+ *  scene avec gf ???
+ *  prochain rdv: mercredi 16 mars 9h30
+ */
 
 /*
  * Packet thread
