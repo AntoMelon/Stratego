@@ -20,10 +20,7 @@
 
 /*TODO:
  * animation duel
- * idée : ajout perso au hud
- * !!! rdv: 14h lundi 28 !!!
- * empêcher envoie move si -1;-1
-*/
+ */
 
 /*
  * Packet thread
@@ -43,7 +40,7 @@ gf::Vector2i select_on_board(gf::Vector2i selection) {
 
     selection = gf::Vector2i(selection.x / SPRITE_SIZE, selection.y / SPRITE_SIZE);
 
-    if ((selection.x < COORD_MIN) || (selection.x > COORD_MAX) || (selection.y < COORD_MIN) || (selection.x > COORD_MAX)) return gf::Vector2i(-1, -1);
+    if ((selection.x < COORD_MIN) || (selection.x > COORD_MAX) || (selection.y < COORD_MIN) || (selection.y > COORD_MAX)) return gf::Vector2i(-1, -1);
 
     if (((selection.y == 4) || (selection.y == 5)) && ((selection.x == 2) || (selection.x == 3) || (selection.x == 6) || (selection.x == 7))) return gf::Vector2i(-1, -1);
 
@@ -165,10 +162,9 @@ int main(int argc, char* argv[]) {
      * display windows and launch every function linked to an event or a call from the server
      */
     while (window.isOpen()) {
-        /*
-         * Take event from user and do all the things linked
-         */
+
         while (window.pollEvent(event)) {
+
             switch (event.type) {
 
                 case gf::EventType::Closed: // close the window
