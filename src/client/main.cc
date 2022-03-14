@@ -82,6 +82,8 @@ void sendMove(stg::ClientMoveRequest move, gf::TcpSocket &socket) {
     socket.sendPacket(to_send);
 }
 
+struct Sprite_pair { gf::Sprite sprite_1 = gf::Sprite(); gf::Sprite sprite_2 = gf::Sprite(); };
+
 /*
  * main function
  * simulate a game
@@ -97,6 +99,8 @@ int main(int argc, char* argv[]) {
 
     stg::Board board;
     bool myTurn(false);
+    bool animate(false);
+    Sprite_pair sprites_anim;
     stg::Color myColor(stg::Color::BLUE);
     stg::PLAYING_STATE state(stg::PLAYING_STATE::CONNEXION);
 
@@ -146,6 +150,9 @@ int main(int argc, char* argv[]) {
     txt.setColor(gf::Color::White);
     txt.setPosition({0, 660});
 
+    sprites_anim.sprite_1.setPosition({0 , -64});
+    sprites_anim.sprite_2.setPosition({0 , 680});
+
     zone_to_place.setSize({636, 252});
 
     zone_to_place.setColor(gf::Color::Transparent);
@@ -188,6 +195,7 @@ int main(int argc, char* argv[]) {
                     break;
 
                 case gf::EventType::MouseButtonPressed: //if click on the window
+                    if (animate == true) break;
                     if (event.mouseButton.button == gf::MouseButton::Left) {
                         mouse_click = event.mouseButton.coords;
                         switch (state) {
@@ -205,9 +213,7 @@ int main(int argc, char* argv[]) {
                                         if ((selected != gf::Vector2i(-1, -1)) && (board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::NONE)) selected = gf::Vector2i(-1, -1); //if click on a cell with no piece
                                     }
                                     if(selected != gf::Vector2i(-1, -1)) { // if click on memory -> send the move
-                                        std::cout << "selected : " << selected.x << " " << selected.y << std::endl;
                                         board.getPiece(selected.x, selected.y).display = false;
-                                        std::cout << "is display : " << board.getPiece(selected.x, selected.y).isDisplayed() << std::endl;
                                     }
                                 }
                                 break;
@@ -220,7 +226,6 @@ int main(int argc, char* argv[]) {
                                         break;
                                     }
                                     board.getPiece(selected.x, selected.y).setDisplay(false);
-                                    std::cout << "is display : " << board.getPiece(selected.x, selected.y).isDisplayed() << std::endl;
                                     if ((selected != gf::Vector2i(-1, -1))
                                     && ((board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::NONE)
                                     || (board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::DRAPEAU)
@@ -237,10 +242,12 @@ int main(int argc, char* argv[]) {
                     break;
 
                 case gf::EventType::MouseMoved:
+                    if (animate == true) break;
                     mouse_position = event.mouseCursor.coords;
                     break;
 
                 case gf::EventType::MouseButtonReleased: {
+                    if (animate == true) break;
                     if ((mouse_click.x < 128) && (mouse_click.y < 26)) {
                         break;
                     }
@@ -248,7 +255,6 @@ int main(int argc, char* argv[]) {
                         break;
                     }
                     board.getPiece(selected.x, selected.y).setDisplay(true);
-                    std::cout << "is display : " << board.getPiece(selected.x, selected.y).isDisplayed() << std::endl;
                     switch (state) {
                         case stg::PLAYING_STATE::PLACEMENT: {
                             auto click_coord = select_on_board(renderer.mapPixelToCoords(mouse_position, *currentView));
@@ -276,7 +282,6 @@ int main(int argc, char* argv[]) {
                                      select_on_board(renderer.mapPixelToCoords(mouse_position, *currentView)).y, myColor},
                                     socket_client
                             );
-                            std::cout << "Send piece at (" << selected.x << ";" << selected.y << ") which is a " << board.getPiece(selected.x, selected.y).getPieceName() << std::endl;
                             selected = gf::Vector2i(-1, -1);
                             break;
 
@@ -304,9 +309,8 @@ int main(int argc, char* argv[]) {
         /*
          * Take message from server and all the things linked
          */
-        if (serverPackets.poll(communication)) {
+        if ((animate == false ) && (serverPackets.poll(communication))) {
             switch(communication.getType()) {
-
                 case stg::ServerMessage::type: // take message in function of code
                 {
 
@@ -366,26 +370,31 @@ int main(int argc, char* argv[]) {
                 {
                     stg::ServerMoveNotif com = communication.as<stg::ServerMoveNotif>();
                     if (com.atk_alive && !com.def_alive) {
-                        std::cout << "mouvement ou duel gagné" << std::endl;
                         board.unsetPiece({com.to_x, com.to_y});
                         board.movePiece(gf::Vector2i({com.from_x, com.from_y}), gf::Vector2i({com.to_x, com.to_y}));
 
                         if (com.duel_occured) {
+                            animate = true;
                             board.setPiece(com.to_x,com.to_y,{com.str_atk,com.color_atk});
+                            sprites_anim.sprite_1.setTexture(gf::Texture("resources/" + board.getTexture(com.str_atk , com.color_atk)));
+                            sprites_anim.sprite_2.setTexture(gf::Texture("resources/" + board.getTexture(com.str_def , com.color_def)));
                         }
                     } else if (!com.atk_alive && com.def_alive) {
-                        std::cout << "duel perdu" << std::endl;
                         board.unsetPiece({com.from_x, com.from_y});
-                        //board.movePiece(gf::Vector2i({com.from_x, com.from_y}), gf::Vector2i({com.to_x, com.to_y}));
 
                         if (com.duel_occured) {
+                            animate = true;
                             board.setPiece(com.to_x,com.to_y,{com.str_def,com.color_def});
+                            sprites_anim.sprite_1.setTexture(gf::Texture("resources/" + board.getTexture(com.str_atk , com.color_atk)));
+                            sprites_anim.sprite_2.setTexture(gf::Texture("resources/" + board.getTexture(com.str_def , com.color_def)));
                         }
                     } else if (!com.atk_alive && !com.def_alive) {
+                        animate = true;
                         board.unsetPiece({com.from_x,com.from_y});
                         board.unsetPiece({com.to_x,com.to_y});
+                        sprites_anim.sprite_1.setTexture(gf::Texture("resources/" + board.getTexture(com.str_atk , com.color_atk)));
+                        sprites_anim.sprite_2.setTexture(gf::Texture("resources/" + board.getTexture(com.str_def , com.color_def)));
                     }
-                    board.toString();
 
                     if (com.win) {
                         state = stg::PLAYING_STATE::END;
@@ -433,6 +442,18 @@ int main(int argc, char* argv[]) {
             }
         }
 
+        if (animate == true) {
+            sprites_anim.sprite_1.setPosition({0 , sprites_anim.sprite_1.getPosition().y + 2});
+            sprites_anim.sprite_2.setPosition({0 , sprites_anim.sprite_2.getPosition().y - 2});
+
+        }
+
+        if (sprites_anim.sprite_1.getPosition().y > 320) {
+            animate = false;
+            sprites_anim.sprite_1.setPosition({0 , -64});
+            sprites_anim.sprite_2.setPosition({0 , 680});
+        }
+
         /*
          * display all element in the window
          */
@@ -454,11 +475,13 @@ int main(int argc, char* argv[]) {
                 renderer.draw(S_hud_rules);
                 renderer.draw(txt);
                 if (state == stg::PLAYING_STATE::PLACEMENT) renderer.draw(zone_to_place);
+                std::cout << "Rendu" << std::endl;
                 if (selected != gf::Vector2i({-1,-1})) {
-                    /*ùS_selected_box.setPosition(gf::Vector2i({selected.x * SPRITE_SIZE, selected.y * SPRITE_SIZE}));
-                    renderer.draw(S_selected_box);*/
                     renderer.draw(sprite_selected);
                 }
+                std::cout << "Fin rendu" << std::endl;
+                renderer.draw(sprites_anim.sprite_1);
+                renderer.draw(sprites_anim.sprite_2);
                 renderer.setView(screenView);
                 if (state == stg::PLAYING_STATE::PLACEMENT) renderer.draw(S_starting_button);
                 break;
