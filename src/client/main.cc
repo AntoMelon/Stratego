@@ -180,8 +180,8 @@ int main(int argc, char* argv[]) {
 
     stg::Board board;
     bool myTurn(false);
-    // -- > bool animate(false);
-    // -- > Sprite_pair sprites_anim;
+    bool animate(false);
+    Sprite_pair sprites_anim;
     stg::Color myColor(stg::Color::BLUE);
     stg::PLAYING_STATE state(stg::PLAYING_STATE::CONNEXION);
 
@@ -234,8 +234,8 @@ int main(int argc, char* argv[]) {
     std::vector<gf::Vector2i> reachable;
     std::vector<gf::RectangleShape> reachable_squares;
 
-    // -- > sprites_anim.sprite_1.setPosition({0 , -64});
-    // -- > sprites_anim.sprite_2.setPosition({0 , 680});
+    sprites_anim.sprite_1.setPosition({0 , -64});
+    sprites_anim.sprite_2.setPosition({0 , 680});
 
     zone_to_place.setSize({636, 252});
 
@@ -333,12 +333,12 @@ int main(int argc, char* argv[]) {
                     break;
 
                 case gf::EventType::MouseMoved:
-                    // -- > if (animate == true) break;
+                    if (animate == true) break;
                     mouse_position = event.mouseCursor.coords;
                     break;
 
                 case gf::EventType::MouseButtonReleased: {
-                    // -- > if (animate == true) break;
+                    if (animate == true) break;
                     if ((mouse_click.x < 128) && (mouse_click.y < 26)) {
                         break;
                     }
@@ -465,26 +465,32 @@ int main(int argc, char* argv[]) {
                         board.movePiece(gf::Vector2i({com.from_x, com.from_y}), gf::Vector2i({com.to_x, com.to_y}));
 
                         if (com.duel_occured) {
-                            // -- > animate = true;
+                            animate = true;
                             board.setPiece(com.to_x,com.to_y,{com.str_atk,com.color_atk});
-                            // -- > sprites_anim.sprite_1.setTexture(gf::Texture("resources/" + board.getTexture(com.str_atk , com.color_atk)));
-                            // -- > sprites_anim.sprite_2.setTexture(gf::Texture("resources/" + board.getTexture(com.str_def , com.color_def)));
+                            sprites_anim.sprite_1.setTexture(gf::Texture("resources/" + board.getTexture(com.str_atk , com.color_atk)));
+                            sprites_anim.sprite_2.setTexture(gf::Texture("resources/" + board.getTexture(com.str_def , com.color_def)));
+                            std::cout << "resources/" + board.getTexture(com.str_atk , com.color_atk) << std::endl;
+                            std::cout << "resources/" + board.getTexture(com.str_def , com.color_def) << std::endl;
                         }
                     } else if (!com.atk_alive && com.def_alive) {
                         board.unsetPiece({com.from_x, com.from_y});
 
                         if (com.duel_occured) {
-                            // -- > animate = true;
+                            animate = true;
                             board.setPiece(com.to_x,com.to_y,{com.str_def,com.color_def});
-                            // -- > sprites_anim.sprite_1.setTexture(gf::Texture("resources/" + board.getTexture(com.str_atk , com.color_atk)));
-                            // -- > sprites_anim.sprite_2.setTexture(gf::Texture("resources/" + board.getTexture(com.str_def , com.color_def)));
+                            sprites_anim.sprite_1.setTexture(gf::Texture("resources/" + board.getTexture(com.str_atk , com.color_atk)));
+                            sprites_anim.sprite_2.setTexture(gf::Texture("resources/" + board.getTexture(com.str_def , com.color_def)));
+                            std::cout << "resources/" + board.getTexture(com.str_atk , com.color_atk) << std::endl;
+                            std::cout << "resources/" + board.getTexture(com.str_def , com.color_def) << std::endl;
                         }
                     } else if (!com.atk_alive && !com.def_alive) {
-                        // -- > animate = true;
+                        animate = true;
                         board.unsetPiece({com.from_x,com.from_y});
                         board.unsetPiece({com.to_x,com.to_y});
-                        // -- > sprites_anim.sprite_1.setTexture(gf::Texture("resources/" + board.getTexture(com.str_atk , com.color_atk)));
-                        // -- > sprites_anim.sprite_2.setTexture(gf::Texture("resources/" + board.getTexture(com.str_def , com.color_def)));
+                        sprites_anim.sprite_1.setTexture(gf::Texture("resources/" + board.getTexture(com.str_atk , com.color_atk)));
+                        sprites_anim.sprite_2.setTexture(gf::Texture("resources/" + board.getTexture(com.str_def , com.color_def)));
+                        std::cout << "resources/" + board.getTexture(com.str_atk , com.color_atk) << std::endl;
+                        std::cout << "resources/" + board.getTexture(com.str_def , com.color_def) << std::endl;
                     }
 
                     if (com.win) {
@@ -533,7 +539,7 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        /* -- > if (animate == true) {
+        if (animate == true) {
             sprites_anim.sprite_1.setPosition({0 , sprites_anim.sprite_1.getPosition().y + 2});
             sprites_anim.sprite_2.setPosition({0 , sprites_anim.sprite_2.getPosition().y - 2});
 
@@ -543,7 +549,7 @@ int main(int argc, char* argv[]) {
             animate = false;
             sprites_anim.sprite_1.setPosition({0 , -64});
             sprites_anim.sprite_2.setPosition({0 , 680});
-        }*/
+        }
 
         for (auto i=reachable.begin();i!=reachable.end();i++) {
             gf::RectangleShape rect;
@@ -584,8 +590,8 @@ int main(int argc, char* argv[]) {
                     renderer.draw(sprite_selected);
                 }
                 //std::cout << "Fin rendu" << std::endl;
-                // -- > renderer.draw(sprites_anim.sprite_1);
-                // -- > renderer.draw(sprites_anim.sprite_2);
+                renderer.draw(sprites_anim.sprite_1);
+                renderer.draw(sprites_anim.sprite_2);
                 renderer.setView(screenView);
                 if (state == stg::PLAYING_STATE::PLACEMENT) renderer.draw(S_starting_button);
                 break;
