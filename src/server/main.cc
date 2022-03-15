@@ -241,6 +241,17 @@ bool dealWithRequestIfInitialBoard(gf::TcpSocket& sender, gf::Packet& packet, st
     return boardOk;
 }
 
+void dealWithPacketIfClose(gf::TcpSocket& sender, gf::TcpSocket& other) {
+    gf::Packet to_send;
+    stg::ServerMessage close;
+
+    close.code = stg::ResponseCode::OPP_DISCO;
+    close.message = "L'adversaire s'est déconnecté. Vous avez gagné ! :)";
+
+    to_send.is(close);
+    other.sendPacket(to_send);
+}
+
 void sendInfoMessage(gf::TcpSocket& dest, std::string message) {
     gf::Packet to_send;
 
@@ -356,30 +367,62 @@ int main(int argc, char* argv[]) {
         if (packetsFromP1.poll(clientPacket)) {
             switch (state) {
                 case stg::PLAYING_STATE::PLACEMENT:
-                board1Received = dealWithRequestIfInitialBoard(player1,clientPacket,board);
-                std::cout << "Plateau 1 reçu, validite: " << board1Received << std::endl;
+
+                switch (clientPacket.getType()) {
+                    case stg::ClientBoardSubmit::type: {
+                        board1Received = dealWithRequestIfInitialBoard(player1,clientPacket,board);
+                        std::cout << "Plateau 1 reçu, validite: " << board1Received << std::endl;
+                        break;
+                    }
+
+                    case stg::ClientClosesGame::type: {
+                        dealWithPacketIfClose(player1,player2);
+                        state = stg::PLAYING_STATE::END;
+                        inGame = false;
+                        break;
+                    }
+
+                    default:
+                    break;
+                }
                 break;
 
                 case stg::PLAYING_STATE::IN_GAME:
                 {
-                    if (turn == 0) {
-                        std::pair<bool,bool> moveResult = dealWithMoveRequest(player1,player2,clientPacket,board);
-                        bothFlags = moveResult.second;
-
-                        if (moveResult.first && bothFlags) {
-                            turn = 1 - turn;
-                            sendInfoMessage(player2, "Votre tour");
-                            sendInfoMessage(player1, "Votre adversaire joue");
+                    switch (clientPacket.getType()) {
+                        case stg::ClientClosesGame::type: {
+                            dealWithPacketIfClose(player1,player2);
+                            state = stg::PLAYING_STATE::END;
+                            inGame = false;
+                            break;
                         }
-                    } else {
-                        gf::Packet wrongTurn;
-                        stg::ServerMessage wrT;
-                        wrT.code = stg::ResponseCode::NOT_YOUR_TURN;
-                        wrT.message = "Ce n'est pas à vous de jouer !";
 
-                        wrongTurn.is(wrT);
+                        case stg::ClientMoveRequest::type: {
+                            if (turn == 0) {
+                                std::pair<bool,bool> moveResult = dealWithMoveRequest(player1,player2,clientPacket,board);
+                                bothFlags = moveResult.second;
 
-                        player1.sendPacket(wrongTurn);
+                                if (moveResult.first && bothFlags) {
+                                    turn = 1 - turn;
+                                    sendInfoMessage(player2, "Votre tour");
+                                    sendInfoMessage(player1, "Votre adversaire joue");
+                                }
+                            } else {
+                                gf::Packet wrongTurn;
+                                stg::ServerMessage wrT;
+                                wrT.code = stg::ResponseCode::NOT_YOUR_TURN;
+                                wrT.message = "Ce n'est pas à vous de jouer !";
+
+                                wrongTurn.is(wrT);
+
+                                player1.sendPacket(wrongTurn);
+                            }
+
+                            break;
+                        }
+
+                        default:
+                        break;
                     }
                     break;
                 }
@@ -392,33 +435,65 @@ int main(int argc, char* argv[]) {
         if (packetsFromP2.poll(clientPacket)) {
             switch (state) {
                 case stg::PLAYING_STATE::PLACEMENT:
-                board2Received = dealWithRequestIfInitialBoard(player2,clientPacket,board);
-                std::cout << "Plateau 2 reçu, validite: " << board2Received << std::endl;
+
+                switch (clientPacket.getType()) {
+                    case stg::ClientBoardSubmit::type: {
+                        board2Received = dealWithRequestIfInitialBoard(player2,clientPacket,board);
+                        std::cout << "Plateau 1 reçu, validite: " << board1Received << std::endl;
+                        break;
+                    }
+
+                    case stg::ClientClosesGame::type: {
+                        dealWithPacketIfClose(player2,player1);
+                        state = stg::PLAYING_STATE::END;
+                        inGame = false;
+                        break;
+                    }
+
+                    default:
+                    break;
+                }
                 break;
 
                 case stg::PLAYING_STATE::IN_GAME:
                 {
-                    if (turn == 1) {
-                        std::pair<bool,bool> moveResult = dealWithMoveRequest(player2,player1,clientPacket,board);
-                        bothFlags = moveResult.second;
-                        if (moveResult.first && bothFlags) {
-                            turn = 1 - turn;
-                            sendInfoMessage(player1, "Votre tour");
-                            sendInfoMessage(player2, "Votre adversaire joue");
+                    switch (clientPacket.getType()) {
+                        case stg::ClientClosesGame::type: {
+                            dealWithPacketIfClose(player2,player1);
+                            state = stg::PLAYING_STATE::END;
+                            inGame = false;
+                            break;
                         }
 
-                    } else {
-                        gf::Packet wrongTurn;
-                        stg::ServerMessage wrT;
-                        wrT.code = stg::ResponseCode::NOT_YOUR_TURN;
-                        wrT.message = "Ce n'est pas à votre tour de jouer !";
+                        case stg::ClientMoveRequest::type: {
+                            if (turn == 1) {
+                                std::pair<bool,bool> moveResult = dealWithMoveRequest(player2,player1,clientPacket,board);
+                                bothFlags = moveResult.second;
 
-                        wrongTurn.is(wrT);
+                                if (moveResult.first && bothFlags) {
+                                    turn = 1 - turn;
+                                    sendInfoMessage(player1, "Votre tour");
+                                    sendInfoMessage(player2, "Votre adversaire joue");
+                                }
+                            } else {
+                                gf::Packet wrongTurn;
+                                stg::ServerMessage wrT;
+                                wrT.code = stg::ResponseCode::NOT_YOUR_TURN;
+                                wrT.message = "Ce n'est pas à vous de jouer !";
 
-                        player2.sendPacket(wrongTurn);
+                                wrongTurn.is(wrT);
+
+                                player2.sendPacket(wrongTurn);
+                            }
+
+                            break;
+                        }
+
+                        default:
+                        break;
                     }
+                    break;
                 }
-                break;
 
                 default:
                     break;

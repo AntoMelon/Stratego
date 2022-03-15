@@ -28,7 +28,8 @@ namespace stg {
         BOARD_ERR,
         MOVE_ERR,
         NOT_YOUR_TURN,
-        INFO
+        INFO,
+        OPP_DISCO
     };
 
 
@@ -64,6 +65,15 @@ namespace stg {
         stg::Color color;
         std::vector<stg::Piece> board;
     };
+
+    struct ClientClosesGame {
+        static constexpr gf::Id type = "ClientClosesGame"_id;
+    };
+
+    template<typename Archive>
+    Archive operator|(Archive& ar, ClientClosesGame& closes) {
+        return ar;
+    }
 
     template<typename Archive> 
     Archive operator|(Archive& ar, ClientBoardSubmit& submit) {

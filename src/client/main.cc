@@ -267,9 +267,15 @@ int main(int argc, char* argv[]) {
         while (window.pollEvent(event)) {
             switch (event.type) {
 
-                case gf::EventType::Closed: // close the window
+                case gf::EventType::Closed: { // close the window
+                    gf::Packet to_send;
+                    struct stg::ClientClosesGame close;
+                    to_send.is(close);
+                    socket_client.sendPacket(to_send);
+
                     window.close();
                     break;
+                }
 
                 case gf::EventType::KeyPressed:
                     switch (event.key.keycode) {
@@ -448,6 +454,17 @@ int main(int argc, char* argv[]) {
 
                         case stg::ResponseCode::INFO:
                             txt.setString(com.message);
+                            break;
+
+                        case stg::ResponseCode::OPP_DISCO:
+                            txt.setString(com.message);
+                            state = stg::PLAYING_STATE::END;
+                            if (myColor == stg::Color::BLUE) {
+                                T_end_screen = gf::Texture("resources/blue_win.png");
+                            } else {
+                                T_end_screen = gf::Texture("resources/red_win.png");
+                            }
+                            S_end_screen = gf::Sprite(T_end_screen);
                             break;
 
                         default:
