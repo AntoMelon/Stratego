@@ -82,6 +82,87 @@ void sendMove(stg::ClientMoveRequest move, gf::TcpSocket &socket) {
     socket.sendPacket(to_send);
 }
 
+std::vector<gf::Vector2i> reachable_cases(stg::Board &board, gf::Vector2i pieceCoords) {
+    std::vector<gf::Vector2i> reachable;
+    stg::Piece selected_piece = board.getPiece(pieceCoords.x, pieceCoords.y);
+    if(selected_piece.getPieceName() != stg::PieceName::ECLAIREUR) {
+        if(pieceCoords.x-1 >= COORD_MIN && board.getSquare(pieceCoords.x-1, pieceCoords.y).getType()!=stg::TileType::River) {
+            if(board.getPiece(pieceCoords.x-1, pieceCoords.y).getPieceName() == stg::PieceName::NONE || board.getPiece(pieceCoords.x-1, pieceCoords.y).getColor() != selected_piece.getColor()) {
+                reachable.push_back(gf::Vector2i(pieceCoords.x-1, pieceCoords.y));
+            }
+        }
+        if(pieceCoords.x+1 <= COORD_MAX && board.getSquare(pieceCoords.x+1, pieceCoords.y).getType()!=stg::TileType::River) {
+            if(board.getPiece(pieceCoords.x+1, pieceCoords.y).getPieceName() == stg::PieceName::NONE || board.getPiece(pieceCoords.x+1, pieceCoords.y).getColor() != selected_piece.getColor()) {
+                reachable.push_back(gf::Vector2i(pieceCoords.x+1, pieceCoords.y));
+            }
+        }
+        if(pieceCoords.y-1 >= COORD_MIN && board.getSquare(pieceCoords.x, pieceCoords.y-1).getType()!=stg::TileType::River) {
+            if(board.getPiece(pieceCoords.x, pieceCoords.y-1).getPieceName() == stg::PieceName::NONE || board.getPiece(pieceCoords.x, pieceCoords.y-1).getColor() != selected_piece.getColor()) {
+                reachable.push_back(gf::Vector2i(pieceCoords.x, pieceCoords.y-1));
+            }
+        }
+        if(pieceCoords.y+1 <= COORD_MAX && board.getSquare(pieceCoords.x, pieceCoords.y+1).getType()!=stg::TileType::River) {
+            if(board.getPiece(pieceCoords.x, pieceCoords.y+1).getPieceName() == stg::PieceName::NONE || board.getPiece(pieceCoords.x, pieceCoords.y+1).getColor() != selected_piece.getColor()) {
+                reachable.push_back(gf::Vector2i(pieceCoords.x, pieceCoords.y+1));
+            }
+        }
+    } else {
+        for(int i = pieceCoords.x-1; i >= COORD_MIN; i--) {
+            if(board.getPiece(i, pieceCoords.y).getPieceName() == stg::PieceName::NONE && board.getSquare(i, pieceCoords.y).getType()!=stg::TileType::River) {
+                reachable.push_back(gf::Vector2i(i, pieceCoords.y));
+            } else {
+                if(board.getSquare(i, pieceCoords.y).getType()==stg::TileType::River) {
+                    break;
+                }
+                if(board.getPiece(i,pieceCoords.y).getColor() != selected_piece.getColor()) {
+                    reachable.push_back(gf::Vector2i(i, pieceCoords.y));
+                }
+                break;
+            }
+        }
+        for(int i = pieceCoords.x+1; i <= COORD_MAX; i++) {
+            if(board.getPiece(i, pieceCoords.y).getPieceName() == stg::PieceName::NONE && board.getSquare(i, pieceCoords.y).getType()!=stg::TileType::River) {
+                reachable.push_back(gf::Vector2i(i, pieceCoords.y));
+            } else {
+                if(board.getSquare(i, pieceCoords.y).getType()==stg::TileType::River) {
+                    break;
+                }
+                if(board.getPiece(i,pieceCoords.y).getColor() != selected_piece.getColor()) {
+                    reachable.push_back(gf::Vector2i(i, pieceCoords.y));
+                }
+                break;
+            }
+        }
+        for(int i = pieceCoords.y-1; i >= COORD_MIN; i--) {
+            if(board.getPiece(pieceCoords.x, i).getPieceName() == stg::PieceName::NONE && board.getSquare(pieceCoords.x, i).getType()!=stg::TileType::River) {
+                reachable.push_back(gf::Vector2i(pieceCoords.x, i));
+            } else {
+                if(board.getSquare(pieceCoords.x, i).getType()==stg::TileType::River) {
+                    break;
+                }
+                if(board.getPiece(pieceCoords.x,i).getColor() != selected_piece.getColor()) {
+                    reachable.push_back(gf::Vector2i(pieceCoords.x, i));
+                }
+                break;
+            }
+        }
+        for(int i = pieceCoords.y+1; i >= COORD_MIN; i--) {
+            if(board.getPiece(pieceCoords.x, i).getPieceName() == stg::PieceName::NONE && board.getSquare(pieceCoords.x, i).getType()!=stg::TileType::River) {
+                reachable.push_back(gf::Vector2i(pieceCoords.x, i));
+            } else {
+                if(board.getSquare(pieceCoords.x, i).getType()==stg::TileType::River) {
+                    break;
+                }
+                if(board.getPiece(pieceCoords.x,i).getColor() != selected_piece.getColor()) {
+                    reachable.push_back(gf::Vector2i(pieceCoords.x, i));
+                }
+                break;
+            }
+        }
+    }
+    return reachable;
+}
+
 struct Sprite_pair { gf::Sprite sprite_1 = gf::Sprite(); gf::Sprite sprite_2 = gf::Sprite(); };
 
 /*
@@ -150,6 +231,9 @@ int main(int argc, char* argv[]) {
     txt.setColor(gf::Color::White);
     txt.setPosition({0, 660});
 
+    std::vector<gf::Vector2i> reachable;
+    std::vector<gf::RectangleShape> reachable_squares;
+
     // -- > sprites_anim.sprite_1.setPosition({0 , -64});
     // -- > sprites_anim.sprite_2.setPosition({0 , 680});
 
@@ -174,6 +258,9 @@ int main(int argc, char* argv[]) {
      * display windows and launch every function linked to an event or a call from the server
      */
     while (window.isOpen()) {
+
+        reachable_squares.clear();
+
         /*
          * Take event from user and do all the things linked
          */
@@ -226,6 +313,10 @@ int main(int argc, char* argv[]) {
                                         break;
                                     }
                                     board.getPiece(selected.x, selected.y).setDisplay(false);
+                                    reachable = reachable_cases(board, selected);
+                                    for(auto &case_ : reachable) {
+                                        std::cout << "x : " << case_.x << " y : " << case_.y << std::endl;
+                                    }
                                     if ((selected != gf::Vector2i(-1, -1))
                                     && ((board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::NONE)
                                     || (board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::DRAPEAU)
@@ -454,6 +545,16 @@ int main(int argc, char* argv[]) {
             sprites_anim.sprite_2.setPosition({0 , 680});
         }*/
 
+        for (auto i=reachable.begin();i!=reachable.end();i++) {
+            gf::RectangleShape rect;
+            rect.setSize({64,64});
+            rect.setPosition({static_cast<float>(i->x*64),static_cast<float>(i->y*64)});
+            rect.setOutlineColor(gf::Color4f(0,255,0,0.5));
+            rect.setOutlineThickness(1);
+            rect.setColor(gf::Color4f(0,255,0,0.2));
+            reachable_squares.push_back(rect);
+        }
+
         /*
          * display all element in the window
          */
@@ -475,11 +576,14 @@ int main(int argc, char* argv[]) {
                 renderer.draw(S_hud_rules);
                 renderer.draw(txt);
                 if (state == stg::PLAYING_STATE::PLACEMENT) renderer.draw(zone_to_place);
-                std::cout << "Rendu" << std::endl;
+                //std::cout << "Rendu" << std::endl;
                 if (selected != gf::Vector2i({-1,-1})) {
+                    for(auto i=reachable_squares.begin();i!=reachable_squares.end();i++) {
+                        renderer.draw(*i);
+                    }
                     renderer.draw(sprite_selected);
                 }
-                std::cout << "Fin rendu" << std::endl;
+                //std::cout << "Fin rendu" << std::endl;
                 // -- > renderer.draw(sprites_anim.sprite_1);
                 // -- > renderer.draw(sprites_anim.sprite_2);
                 renderer.setView(screenView);
