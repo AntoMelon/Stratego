@@ -29,6 +29,9 @@ namespace stg {
     }
 
     bool ServerBoard::isMoveAllowed(int from_x,int from_y, int to_x, int to_y, stg::Color color) const {
+        if (from_x < COORD_MIN || from_x > COORD_MAX || from_y < COORD_MIN || from_y > COORD_MAX || to_x < COORD_MIN || to_x > COORD_MAX || to_y < COORD_MIN || to_y > COORD_MAX) {
+            return false;
+        }
 
         //same place
         if (from_x == to_x && from_y == to_y) {
