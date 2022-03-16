@@ -75,7 +75,6 @@ void sendFirstBoard(std::vector<stg::Piece> board, stg::Color color, gf::TcpSock
  * send a try of move to the server
  */
 void sendMove(stg::ClientMoveRequest move, gf::TcpSocket &socket) {
-    std::cout <<"envoie du coup: " << move.from_x << ", " << move.from_y << ", " << move.to_x << ", " << move.to_y << ", " << move.color << std::endl;
     gf::Packet to_send;
     to_send.is(move);
     socket.sendPacket(to_send);
@@ -322,9 +321,6 @@ int main(int argc, char* argv[]) {
                                     }
                                     board.getPiece(selected.x, selected.y).setDisplay(false);
                                     reachable = reachable_cases(board, selected);
-                                    for(auto &case_ : reachable) {
-                                        std::cout << "x : " << case_.x << " y : " << case_.y << std::endl;
-                                    }
                                     if ((selected != gf::Vector2i(-1, -1))
                                     && ((board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::NONE)
                                     || (board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::DRAPEAU)

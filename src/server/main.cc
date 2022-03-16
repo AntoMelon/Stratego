@@ -31,7 +31,7 @@ auto threadPackets = [] (gf::TcpSocket &socket,gf::Queue<gf::Packet> &queue) {
 
 bool isSubmittedBoardOk(std::vector<stg::Piece> &board) {
     if (board.size() != 40) {
-        std::cout << "wrong size: " << board.size() << std::endl;
+        std::cerr << "[ERROR] Invalid board size : " << board.size() << std::endl;
         return false;
     }
 
@@ -85,7 +85,7 @@ std::pair<int,int> coordinatesConversion(std::pair<int,int> coords, stg::Color c
         res.second = COORD_MAX - res.second;
     } 
 
-    std::cout << "Converted to (" << res.first << "," << res.second << ")" << std::endl;
+    std::cerr << "[INFO] Coordinates converted to (" << res.first << "," << res.second << ")" << std::endl;
 
     return res;
 }
@@ -100,7 +100,7 @@ std::pair<int,int> coordinatesConversion(std::pair<int,int> coords, stg::Color c
 std::pair<bool,bool> dealWithMoveRequest(gf::TcpSocket &sender, gf::TcpSocket &other, gf::Packet &packet, stg::ServerBoard &board) {
 
     gf::Packet to_send;
-    std::cout<<"Reçu"<< std::endl;
+    std::cerr << "[INFO] Packet received from " << sender.getRemoteAddress().getHostname() << std::endl;
 
     if (packet.getType() == stg::ClientMoveRequest::type) {
 
@@ -110,7 +110,7 @@ std::pair<bool,bool> dealWithMoveRequest(gf::TcpSocket &sender, gf::TcpSocket &o
             std::pair<int,int> S_from = coordinatesConversion({request.from_x,request.from_y},sender_color);
             std::pair<int,int> S_to = coordinatesConversion({request.to_x,request.to_y},sender_color);
 
-            std::cout << "From (" << S_from.first << "," << S_from.second << ") to (" << S_to.first << "," << S_to.second <<")" << std::endl;
+            std::cerr << "[INFO] Move request from " << sender.getRemoteAddress().getHostname() << " : " << S_from.first << "," << S_from.second << " -> " << S_to.first << "," << S_to.second << std::endl;
 
             if (!board.isMoveAllowed(S_from.first,S_from.second,S_to.first,S_to.second,sender_color)) {
                 stg::ServerMessage response;
@@ -227,9 +227,9 @@ bool dealWithRequestIfInitialBoard(gf::TcpSocket& sender, gf::Packet& packet, st
         response.code = stg::ResponseCode::BOARD_OK;
         response.message = "Plateau validé. En attente de l'adversaire...";
 
-        std::cout << "Tries to import" << std::endl;
+        std::cerr << "[INFO] Board submitted ok" << std::endl;
         board.importSubmittedBoard(submit.color,submit.board);
-        std::cout << "Imported" << std::endl;
+        std::cerr << "[INFO] Board imported" << std::endl;
     } else {
         response.code = stg::ResponseCode::BOARD_ERR;
         response.message = "Plateau non-valide.";
@@ -281,11 +281,11 @@ int main(int argc, char* argv[]) {
         }
 
         if(player1 && !player2) {
-            std::cout << "A client has connected" << std::endl;
+            std::cerr << "[INFO] New player connected" << std::endl;
 
             player1.recvPacket(packet);
             stg::ClientHello hello = packet.as<stg::ClientHello>();
-            std::cout << "Hello " << hello.name << std::endl;
+            std::cerr << "[INFO] Player " << hello.name << " connected" << std::endl;
 
             stg::ServerMessage resp;
             resp.code = stg::ResponseCode::WAITING;
@@ -295,11 +295,11 @@ int main(int argc, char* argv[]) {
         }
         
         if (player2) {
-            std::cout << "A client has connected" << std::endl;
+            std::cerr << "[INFO] New player connected" << std::endl;
 
             player2.recvPacket(packet);
             stg::ClientHello hello = packet.as<stg::ClientHello>();
-            std::cout << "Hello " << hello.name << std::endl;
+            std::cerr << "[INFO] Player " << hello.name << " connected" << std::endl;
 
             inGame = true;
 
@@ -371,7 +371,12 @@ int main(int argc, char* argv[]) {
                 switch (clientPacket.getType()) {
                     case stg::ClientBoardSubmit::type: {
                         board1Received = dealWithRequestIfInitialBoard(player1,clientPacket,board);
-                        std::cout << "Plateau 1 reçu, validite: " << board1Received << std::endl;
+                        std::cerr << "[INFO] Board received from a player" << std::endl;
+                        if(!board2Received) {
+                            std::cerr << "[ERROR] Invalid board received" << std::endl;
+                        } else {
+                            std::cerr << "[INFO] Board OK" << std::endl;
+                        }
                         break;
                     }
 
@@ -439,7 +444,12 @@ int main(int argc, char* argv[]) {
                 switch (clientPacket.getType()) {
                     case stg::ClientBoardSubmit::type: {
                         board2Received = dealWithRequestIfInitialBoard(player2,clientPacket,board);
-                        std::cout << "Plateau 1 reçu, validite: " << board1Received << std::endl;
+                        std::cerr << "[INFO] Board received from a player" << std::endl;
+                        if(!board2Received) {
+                            std::cerr << "[ERROR] Invalid board received" << std::endl;
+                        } else {
+                            std::cerr << "[INFO] Board OK" << std::endl;
+                        }
                         break;
                     }
 
@@ -502,7 +512,7 @@ int main(int argc, char* argv[]) {
 
 
         if (board1Received && board2Received && state == stg::PLAYING_STATE::PLACEMENT) {
-            std::cout << "Both boards were validated" << std::endl;
+            std::cerr << "[INFO] Both boards received and validated" << std::endl;
             state = stg::PLAYING_STATE::IN_GAME;
             auto& firstPlayer = turn == 0 ? player1 : player2;
             auto& secondPlayer = turn == 0 ? player2 : player1;
@@ -511,7 +521,7 @@ int main(int argc, char* argv[]) {
         }
 
         if (!bothFlags && state == stg::PLAYING_STATE::IN_GAME) {
-            std::cout << "Un drapeau a été capturé. Fin de la partie..." << std::endl;
+            std::cerr << "[INFO] A flag has been captured, ending the game." << std::endl;
             state = stg::PLAYING_STATE::END;
             inGame = false;
         }
