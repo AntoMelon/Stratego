@@ -19,11 +19,10 @@
 #include <gf/Text.h>
 
 /*TODO:
- *  animation duel
- *  message "client quitte"
- *  ajouter filtre sur cases atteignable
- *  scene avec gf ???
- *  prochain rdv: mercredi 16 mars 9h30
+ *  Pour duel stocker les textures
+ *  url pour les urls en bas de page rapport
+ *  1ère page : titre / auteurs / encadrent / université / diplome / date
+ *  prochaine réu : lundi 28 / 16h30 ou 15h si pas seconde chance
  */
 
 /*
@@ -164,6 +163,7 @@ std::vector<gf::Vector2i> reachable_cases(stg::Board &board, gf::Vector2i pieceC
 }
 
 struct Sprite_pair { gf::Sprite sprite_1 = gf::Sprite(); gf::Sprite sprite_2 = gf::Sprite(); };
+struct Texture_pair { gf::Texture texture_1 = gf::Texture(); gf::Texture texture_2 = gf::Texture(); };
 
 /*
  * main function
@@ -180,8 +180,10 @@ int main(int argc, char* argv[]) {
 
     stg::Board board;
     bool myTurn(false);
-     bool animate(false);
-     Sprite_pair sprites_anim;
+    bool animate(false);
+    Sprite_pair sprites_anim;
+    Texture_pair texture_anim;
+
     stg::Color myColor(stg::Color::BLUE);
     stg::PLAYING_STATE state(stg::PLAYING_STATE::CONNEXION);
 
@@ -194,7 +196,7 @@ int main(int argc, char* argv[]) {
     gf::Window window("Stratego online", ScreenSize);
     gf::RenderWindow renderer(window);
 
-    gf::RectF world = gf::RectF::fromSize({760, 680}); //monde du jeu
+    gf::RectF world = gf::RectF::fromSize({850 , 680}); //monde du jeu
     gf::RectF extendedWorld = gf::RectF::fromSize(ScreenSize); //fenêtre
 
     gf::Texture T_drag;
@@ -234,8 +236,8 @@ int main(int argc, char* argv[]) {
     std::vector<gf::Vector2i> reachable;
     std::vector<gf::RectangleShape> reachable_squares;
 
-     sprites_anim.sprite_1.setPosition({0 , -64});
-     sprites_anim.sprite_2.setPosition({0 , 680});
+    sprites_anim.sprite_1.setPosition({780 , -64});
+    sprites_anim.sprite_2.setPosition({780 , 680});
 
     zone_to_place.setSize({636, 252});
 
@@ -484,8 +486,10 @@ int main(int argc, char* argv[]) {
                         if (com.duel_occured) {
                              animate = true;
                             board.setPiece(com.to_x,com.to_y,{com.str_atk,com.color_atk});
-                             sprites_anim.sprite_1.setTexture(gf::Texture("resources/" + board.getTexture(com.str_atk , com.color_atk)));
-                             sprites_anim.sprite_2.setTexture(gf::Texture("resources/" + board.getTexture(com.str_def , com.color_def)));
+                            texture_anim.texture_1 = gf::Texture("resources/" + board.getTexture(com.str_atk , com.color_atk));
+                            texture_anim.texture_2 = gf::Texture("resources/" + board.getTexture(com.str_def , com.color_def));
+                            sprites_anim.sprite_1.setTexture(texture_anim.texture_1);
+                            sprites_anim.sprite_2.setTexture(texture_anim.texture_2);
                         }
                     } else if (!com.atk_alive && com.def_alive) {
                         board.unsetPiece({com.from_x, com.from_y});
@@ -493,15 +497,19 @@ int main(int argc, char* argv[]) {
                         if (com.duel_occured) {
                              animate = true;
                             board.setPiece(com.to_x,com.to_y,{com.str_def,com.color_def});
-                             sprites_anim.sprite_1.setTexture(gf::Texture("resources/" + board.getTexture(com.str_atk , com.color_atk)));
-                             sprites_anim.sprite_2.setTexture(gf::Texture("resources/" + board.getTexture(com.str_def , com.color_def)));
+                            texture_anim.texture_1 = gf::Texture("resources/" + board.getTexture(com.str_atk , com.color_atk));
+                            texture_anim.texture_2 = gf::Texture("resources/" + board.getTexture(com.str_def , com.color_def));
+                            sprites_anim.sprite_1.setTexture(texture_anim.texture_1);
+                            sprites_anim.sprite_2.setTexture(texture_anim.texture_2);
                         }
                     } else if (!com.atk_alive && !com.def_alive) {
                          animate = true;
                         board.unsetPiece({com.from_x,com.from_y});
                         board.unsetPiece({com.to_x,com.to_y});
-                         sprites_anim.sprite_1.setTexture(gf::Texture("resources/" + board.getTexture(com.str_atk , com.color_atk)));
-                         sprites_anim.sprite_2.setTexture(gf::Texture("resources/" + board.getTexture(com.str_def , com.color_def)));
+                        texture_anim.texture_1 = gf::Texture("resources/" + board.getTexture(com.str_atk , com.color_atk));
+                        texture_anim.texture_2 = gf::Texture("resources/" + board.getTexture(com.str_def , com.color_def));
+                        sprites_anim.sprite_1.setTexture(texture_anim.texture_1);
+                        sprites_anim.sprite_2.setTexture(texture_anim.texture_2);
                     }
 
                     if (com.win) {
@@ -551,15 +559,15 @@ int main(int argc, char* argv[]) {
         }
 
         if (animate == true) {
-            sprites_anim.sprite_1.setPosition({0 , sprites_anim.sprite_1.getPosition().y + 2});
-            sprites_anim.sprite_2.setPosition({0 , sprites_anim.sprite_2.getPosition().y - 2});
+            sprites_anim.sprite_1.setPosition({780 , sprites_anim.sprite_1.getPosition().y + 3});
+            sprites_anim.sprite_2.setPosition({780 , sprites_anim.sprite_2.getPosition().y - 3});
 
         }
 
         if (sprites_anim.sprite_1.getPosition().y > 320) {
             animate = false;
-            sprites_anim.sprite_1.setPosition({0 , -64});
-            sprites_anim.sprite_2.setPosition({0 , 680});
+            sprites_anim.sprite_1.setPosition({780 , -64});
+            sprites_anim.sprite_2.setPosition({780 , 680});
         }
 
         for (auto i=reachable.begin();i!=reachable.end();i++) {

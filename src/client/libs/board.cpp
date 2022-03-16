@@ -123,7 +123,7 @@ namespace stg {
 
     void Board::setPieceFromColor(stg::Color color) {
 
-        int x = COORD_MIN, y = 6/*COORD_MIN*/;
+        int x = COORD_MIN, y = 6; // or COORD_MIN for test
         while (x < 8) {
             setPiece(x,y,stg::Piece(stg::PieceName::ECLAIREUR,color));
             ++x;
