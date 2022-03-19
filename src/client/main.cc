@@ -372,7 +372,7 @@ int main(int argc, char* argv[]) {
 
                         case stg::PLAYING_STATE::IN_GAME:
                             mouse_pressed = false;
-                            sendMove(
+                            if (selected != gf::Vector2i(-1,-1))sendMove(
                                     {selected.x, selected.y, select_on_board(renderer.mapPixelToCoords(mouse_position, *currentView)).x,
                                      select_on_board(renderer.mapPixelToCoords(mouse_position, *currentView)).y, myColor},
                                     socket_client
