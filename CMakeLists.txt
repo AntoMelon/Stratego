@@ -19,7 +19,7 @@ file(COPY src/client/resources DESTINATION .)
 
 add_executable(stgclient
   src/client/main.cc
-        src/common/protocol.cpp src/common/protocol.h
+        src/common/protocol.h
         src/common/piece.cc src/common/piece.h src/client/libs/board.h src/client/libs/board.cpp src/client/libs/board.h)
 
 target_link_libraries(stgclient
@@ -42,7 +42,7 @@ set_target_properties(stgclient
 
 add_executable(stgserver
         src/server/main.cc
-        src/common/protocol.cpp src/common/protocol.h
+        src/common/protocol.h
         src/server/server_board.cc src/server/server_board.h
         src/common/piece.cc src/common/piece.h
         )

@@ -66,6 +66,11 @@ namespace stg {
         std::vector<stg::Piece> board;
     };
 
+    template<typename Archive> 
+    Archive operator|(Archive& ar, ClientBoardSubmit& submit) {
+        return ar | submit.color | submit.board;
+    }
+
     struct ClientClosesGame {
         static constexpr gf::Id type = "ClientClosesGame"_id;
     };
@@ -73,11 +78,6 @@ namespace stg {
     template<typename Archive>
     Archive operator|(Archive& ar, ClientClosesGame& closes) {
         return ar;
-    }
-
-    template<typename Archive> 
-    Archive operator|(Archive& ar, ClientBoardSubmit& submit) {
-        return ar | submit.color | submit.board;
     }
 
     /*Server -> Client*/
