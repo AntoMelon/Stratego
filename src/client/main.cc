@@ -18,6 +18,10 @@
 #include <gf/Views.h>
 #include <gf/Text.h>
 
+
+#define ANIMATION_SPD 15
+#define FRAMES_LEFT 30
+
 /*TODO:
  *  Pour duel stocker les textures
  *  url pour les urls en bas de page rapport
@@ -182,6 +186,9 @@ int main(int argc, char* argv[]) {
     bool animate(false);
     Sprite_pair sprites_anim;
     Texture_pair texture_anim;
+    bool anim1left = false;
+    bool anim2left = false;
+    int framesLeft = FRAMES_LEFT;
 
     stg::Color myColor(stg::Color::BLUE);
     stg::PLAYING_STATE state(stg::PLAYING_STATE::CONNEXION);
@@ -480,10 +487,11 @@ int main(int argc, char* argv[]) {
                         board.movePiece(gf::Vector2i({com.from_x, com.from_y}), gf::Vector2i({com.to_x, com.to_y}));
 
                         if (com.duel_occured) {
-                             animate = true;
+                            animate = true;
                             board.setPiece(com.to_x,com.to_y,{com.str_atk,com.color_atk});
                             texture_anim.texture_1 = gf::Texture("resources/" + board.getTexture(com.str_atk , com.color_atk));
                             texture_anim.texture_2 = gf::Texture("resources/" + board.getTexture(com.str_def , com.color_def));
+                            anim1left = true;
                             sprites_anim.sprite_1.setTexture(texture_anim.texture_1);
                             sprites_anim.sprite_2.setTexture(texture_anim.texture_2);
                         }
@@ -495,6 +503,7 @@ int main(int argc, char* argv[]) {
                             board.setPiece(com.to_x,com.to_y,{com.str_def,com.color_def});
                             texture_anim.texture_1 = gf::Texture("resources/" + board.getTexture(com.str_atk , com.color_atk));
                             texture_anim.texture_2 = gf::Texture("resources/" + board.getTexture(com.str_def , com.color_def));
+                            anim2left = true;
                             sprites_anim.sprite_1.setTexture(texture_anim.texture_1);
                             sprites_anim.sprite_2.setTexture(texture_anim.texture_2);
                         }
@@ -554,16 +563,33 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        if (animate == true) {
-            sprites_anim.sprite_1.setPosition({780 , sprites_anim.sprite_1.getPosition().y + 3});
-            sprites_anim.sprite_2.setPosition({780 , sprites_anim.sprite_2.getPosition().y - 3});
+
+        if (animate == true && framesLeft == FRAMES_LEFT) {
+            sprites_anim.sprite_1.setPosition({780 , sprites_anim.sprite_1.getPosition().y + ANIMATION_SPD});
+            sprites_anim.sprite_2.setPosition({780 , sprites_anim.sprite_2.getPosition().y - ANIMATION_SPD});
 
         }
 
-        if (sprites_anim.sprite_1.getPosition().y > 320) {
-            animate = false;
-            sprites_anim.sprite_1.setPosition({780 , -64});
-            sprites_anim.sprite_2.setPosition({780 , 680});
+        if ((sprites_anim.sprite_1.getPosition().y >= 320 || sprites_anim.sprite_2.getPosition().y <= 300) && animate) {
+            if (framesLeft > 0) {
+                --framesLeft;
+            }
+
+            if (framesLeft <= 0 || (!anim1left && !anim2left)) {
+                animate = false;
+                anim1left = false;
+                anim2left = false;
+                framesLeft = FRAMES_LEFT;
+                sprites_anim.sprite_1.setPosition({780 , -64});
+                sprites_anim.sprite_2.setPosition({780 , 680});
+            } else {
+                if (!anim1left) {
+                    sprites_anim.sprite_1.setPosition({780 , -64});
+                }
+                if (!anim2left) {
+                    sprites_anim.sprite_2.setPosition({780 , 680});
+                }
+            }
         }
 
         for (auto i=reachable.begin();i!=reachable.end();i++) {
