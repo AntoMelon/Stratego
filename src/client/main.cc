@@ -84,9 +84,10 @@ void sendMove(stg::ClientMoveRequest move, gf::TcpSocket &socket) {
     socket.sendPacket(to_send);
 }
 
-std::vector<gf::Vector2i> reachable_cases(stg::Board &board, gf::Vector2i pieceCoords) {
+std::vector<gf::Vector2i> reachable_cases(stg::Board &board, gf::Vector2i pieceCoords, stg::Color selfColor) {
     std::vector<gf::Vector2i> reachable;
     stg::Piece selected_piece = board.getPiece(pieceCoords.x, pieceCoords.y);
+    if (selected_piece.getColor() != selfColor) return reachable;
     if(selected_piece.getPieceName() != stg::PieceName::ECLAIREUR) {
         if(pieceCoords.x-1 >= COORD_MIN && board.getSquare(pieceCoords.x-1, pieceCoords.y).getType()!=stg::TileType::River) {
             if(board.getPiece(pieceCoords.x-1, pieceCoords.y).getPieceName() == stg::PieceName::NONE || board.getPiece(pieceCoords.x-1, pieceCoords.y).getColor() != selected_piece.getColor()) {
@@ -327,7 +328,7 @@ int main(int argc, char* argv[]) {
                                         break;
                                     }
                                     board.getPiece(selected.x, selected.y).setDisplay(false);
-                                    reachable = reachable_cases(board, selected);
+                                    reachable = reachable_cases(board, selected, myColor);
                                     if ((selected != gf::Vector2i(-1, -1))
                                     && ((board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::NONE)
                                     || (board.getPiece(selected.x, selected.y).getPieceName() == stg::PieceName::DRAPEAU)
