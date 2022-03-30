@@ -18,20 +18,17 @@ namespace stg {
 
     Board::Board() {
 
-        this->board = std::vector<std::vector<std::pair<Square,Piece>>>();
-        for(int i = COORD_MIN; i <= COORD_MAX; i++) {
-            std::vector<std::pair<Square,Piece>> row;
-            for(int j = COORD_MIN; j <= COORD_MAX; j++) {
-                if (j==4 || j==5) {
-                    if(i==2 || i==3 || i==6 || i==7) {
-                        row.push_back(std::pair(Square(TileType::River, false), Piece(stg::PieceName::LAKE,stg::Color::EMPTY)));
-                        continue;
+        this->board = gf::Array2D<std::pair<Square,Piece>>(gf::Vector2i(10, 10), std::pair<Square,Piece>(Square(TileType::Land, true), Piece(PieceName::NONE, Color::EMPTY)));
+        for(int i = 0; i < 10; i++) {
+            for(int j = 0; j < 10; j++) {
+                if(j == 4 || j == 5) {
+                    if (i == 2 || i == 3 || i == 6 || i == 7) {
+                        board(gf::Vector2i(i,j)) = std::pair<Square,Piece>(Square(TileType::River, false), Piece(PieceName::NONE, Color::EMPTY));
                     }
                 }
-                row.push_back(std::pair(Square(TileType::Land, true), Piece::makeBlankPiece()));
             }
-            this->board.push_back(row);
         }
+
 
         manager.addSearchDir("resources");
 
@@ -79,20 +76,20 @@ namespace stg {
         pieceTextures.insert(std::pair(std::pair(PieceName::MARECHAL, Color::RED), "red_marechal.png"));
     }
 
-    Square Board::getSquare(int x, int y) {
-        return board[x][y].first;
+    Square& Board::getSquare(int x, int y) {
+        return board(gf::Vector2i(x,y)).first;
     }
 
     void Board::setPiece(int x, int y, Piece piece) {
-        board[x][y].second = piece;
+        board(gf::Vector2i(x,y)).second = piece;
     }
 
     void Board::unsetPiece(gf::Vector2i coords) {
-        board[coords.x][coords.y].second = Piece(stg::PieceName::NONE, stg::Color::EMPTY);
+        board(coords).second = Piece(stg::PieceName::NONE, stg::Color::EMPTY);
     }
 
     Piece& Board::getPiece(int x, int y) {
-        return board[x][y].second;
+        return board(gf::Vector2i(x,y)).second;
     }
 
     std::vector<stg::Piece> Board::getAllPiece() {
@@ -103,7 +100,7 @@ namespace stg {
 
             for (int x = COORD_MIN; x <= COORD_MAX; ++x) {
 
-                to_send.push_back(board[x][y].second);
+                to_send.push_back(board(gf::Vector2i(x,y)).second);
 
             }
 
@@ -123,7 +120,7 @@ namespace stg {
 
     void Board::setPieceFromColor(stg::Color color) {
 
-        int x = COORD_MIN, y = COORD_MIN;
+        int x = COORD_MIN, y = 6;
         while (x < 8) {
             setPiece(x,y,stg::Piece(stg::PieceName::ECLAIREUR,color));
             ++x;
@@ -187,7 +184,7 @@ namespace stg {
             for(int j = COORD_MIN; j <= COORD_MAX; j++) {
                 gf::Sprite sprite;
                 sprite.setPosition(gf::Vector2f(i*SPRITE_SIZE, j*SPRITE_SIZE));
-                if(board[i][j].first.getType() == TileType::Land) {
+                if(board(gf::Vector2i(i,j)).first.getType() == TileType::Land) {
                     if(j==COORD_MIN) {
                         if(i==COORD_MIN) {
                             sprite.setTexture(manager.getTexture(gf::Path(tileTextures.at("land_top_left_edge"))));
@@ -211,15 +208,15 @@ namespace stg {
                     } else {
                         sprite.setTexture(manager.getTexture(gf::Path(tileTextures.at("land"))));
                     }
-                } else if(board[i][j].first.getType() == TileType::River) {
-                    if(board[i-1][j].first.getType()==Land) {
-                        if(board[i][j+1].first.getType()==Land) {
+                } else if(board(gf::Vector2i(i,j)).first.getType() == TileType::River) {
+                    if(board(gf::Vector2i(i-1,j)).first.getType()==Land) {
+                        if(board(gf::Vector2i(i,j+1)).first.getType()==Land) {
                             sprite.setTexture(manager.getTexture(gf::Path(tileTextures.at("lake_bottom_left"))));
                         } else {
                             sprite.setTexture(manager.getTexture(gf::Path(tileTextures.at("lake_top_left"))));
                         }
-                    } else if (board[i+1][j].first.getType()==Land) {
-                        if (board[i][j + 1].first.getType() == Land) {
+                    } else if (board(gf::Vector2i(i+1,j)).first.getType()==Land) {
+                        if (board(gf::Vector2i(i,j+1)).first.getType() == Land) {
                             sprite.setTexture(manager.getTexture(gf::Path(tileTextures.at("lake_bottom_right"))));
                         } else {
                             sprite.setTexture(manager.getTexture(gf::Path(tileTextures.at("lake_top_right"))));
@@ -227,10 +224,10 @@ namespace stg {
                     }
                 }
                 renderer.draw(sprite);
-                if(board[i][j].second.getPieceName()!=PieceName::NONE && board[i][j].second.getPieceName() != stg::PieceName::LAKE && board[i][j].second.display) {
+                if(board(gf::Vector2i(i,j)).second.getPieceName()!=PieceName::NONE && board(gf::Vector2i(i,j)).second.getPieceName() != stg::PieceName::LAKE && board(gf::Vector2i(i,j)).second.display) {
                     gf::Sprite sprite;
                     sprite.setPosition(gf::Vector2f(i*SPRITE_SIZE, j*SPRITE_SIZE));
-                    sprite.setTexture(manager.getTexture(gf::Path(pieceTextures.at(std::pair(board[i][j].second.getPieceName(), board[i][j].second.getColor())))));
+                    sprite.setTexture(manager.getTexture(gf::Path(pieceTextures.at(std::pair(board(gf::Vector2i(i,j)).second.getPieceName(), board(gf::Vector2i(i,j)).second.getColor())))));
                     renderer.draw(sprite);
                 }
             }
@@ -239,16 +236,16 @@ namespace stg {
 
     void Board::movePiece(gf::Vector2i from, gf::Vector2i to) {
         if ((from == gf::Vector2i(-1,-1)) || (to == gf::Vector2i(-1,-1))) return;
-        if (board[to.x][to.y].second.getPieceName() != stg::PieceName::NONE) return;
-        setPiece(to.x, to.y, stg::Piece(board[from.x][from.y].second.getPieceName(), board[from.x][from.y].second.getColor()));
-        board[from.x][from.y].second = Piece(stg::PieceName::NONE, stg::Color::EMPTY);
+        if (board(to).second.getPieceName() != stg::PieceName::NONE) return;
+        setPiece(to.x, to.y, stg::Piece(board(from).second.getPieceName(), board(from).second.getColor()));
+        board(from).second = Piece(stg::PieceName::NONE, stg::Color::EMPTY);
         return;
     }
 
     void Board::toString(){
         for (auto y : board) {
-            for (auto x : y) {
-                std::cout << x.second.getPieceName() << " ";
+            for (auto x = 0; x<10; x++) {
+                std::cout << y.second.getPieceName() << " ";
             }
             std::cout << std::endl;
         }
@@ -256,10 +253,10 @@ namespace stg {
 
     void Board::swapPiece(gf::Vector2i first, gf::Vector2i other) {
         if ((first == gf::Vector2i(-1,-1)) || (other == gf::Vector2i(-1,-1))) return;
-        if (board[first.x][first.y].second.getPieceName() == stg::PieceName::NONE) return;
-        if (board[other.x][other.y].second.getPieceName() == stg::PieceName::NONE) return;
-        stg::Piece firstPiece = stg::Piece(board[first.x][first.y].second.getPieceName(), board[first.x][first.y].second.getColor());
-        stg::Piece otherPiece = stg::Piece(board[other.x][other.y].second.getPieceName(), board[other.x][other.y].second.getColor());
+        if (board(first).second.getPieceName() == stg::PieceName::NONE) return;
+        if (board(other).second.getPieceName() == stg::PieceName::NONE) return;
+        stg::Piece firstPiece = stg::Piece(board(first).second.getPieceName(), board(first).second.getColor());
+        stg::Piece otherPiece = stg::Piece(board(other).second.getPieceName(), board(other).second.getColor());
         setPiece(other.x, other.y, firstPiece);
         setPiece(first.x, first.y, otherPiece);
         return;

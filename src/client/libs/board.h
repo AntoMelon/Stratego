@@ -1,7 +1,6 @@
 #ifndef STGCLIENT_BOARD_H
 #define STGCLIENT_BOARD_H
 
-#include <vector>
 #include <string>
 #include "../../common/piece.h"
 #include <gf/RenderWindow.h>
@@ -12,6 +11,7 @@
 #include <gf/ResourceManager.h>
 #include <gf/ViewContainer.h>
 #include <gf/Views.h>
+#include <gf/Array2D.h>
 
 #define SPRITE_SIZE 64
 
@@ -39,7 +39,7 @@ namespace stg {
         Board();
 
         // Get the square at the given coordinates
-        Square getSquare(int x, int y);
+        Square& getSquare(int x, int y);
 
         // Get the piece at the given coordinates
         Piece& getPiece(int x, int y);
@@ -69,7 +69,8 @@ namespace stg {
 
         gf::ResourceManager manager;
     private:
-        std::vector<std::vector<std::pair<Square,stg::Piece>>> board;
+
+        gf::Array2D<std::pair<Square,stg::Piece>> board;
         std::map<std::pair<stg::PieceName, stg::Color>, std::string> pieceTextures;
         std::map<std::string, std::string> tileTextures;
     };
