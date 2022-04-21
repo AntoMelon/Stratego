@@ -1,4 +1,4 @@
-#!/bin/dash
+#!/bin/sh
 
 mkdir build
 cd build
